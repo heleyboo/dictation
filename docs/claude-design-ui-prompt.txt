@@ -1,0 +1,108 @@
+Design the UI for "Dictation", a responsive web app that helps Vietnamese learners improve English listening through sentence-by-sentence dictation. Learners listen to one sentence, type what they hear, and get word-level feedback as they type. They can save new words and review them later with spaced repetition.
+
+## Product context
+- Users: Vietnamese learners at A2–C1 level. They mainly use a laptop and sometimes a phone. Admins are 1–3 people who manage content.
+- All UI text is in Vietnamese. The learning content (audio, transcripts) is in English. Use real Vietnamese labels, not lorem ipsum. Examples: "Bắt đầu học", "Tiếp tục câu 5/24", "Phát lại câu", "Gợi ý", "Hiện đáp án", "Xem bản dịch", "Lưu từ", "Sổ tay từ vựng", "Ôn tập", "Đến hạn".
+- Goals: an efficient study flow, plus reasons to come back (daily streak, a "continue learning" entry point, a due-words badge).
+- Tone: calm, focused, study-desk feel. Not gamified: no XP, badges, mascots or confetti.
+- Build target: React + Tailwind + shadcn/ui. Use shadcn primitives (Button, Card, Popover, Dialog, Tabs, Toggle, Slider, Badge, Input, Select) and a token-based palette with light and dark mode.
+
+## Core screen: Dictation Workspace (most important, design this first and in the most detail)
+Desktop-first layout. It must work at 360px wide.
+1. Audio player bar (sticky):
+   - Play/pause, previous/next sentence, and "Phát lại câu" (replay sentence).
+   - Speed selector: 0.75x / 1x / 1.25x.
+   - A-B loop: set A, set B, clear loop. A and B markers appear on the progress bar. A "Lặp câu này" button loops the current sentence.
+   - Auto-pause toggle (on by default): playback stops at the end of each sentence.
+   - The progress bar is segmented by sentence, and the current sentence is highlighted.
+   - A "Phím tắt" (shortcuts) help icon.
+2. Sentence list: one input per sentence.
+   - Only the current sentence is editable.
+   - Completed sentences show their result read-only with a ✓ and a "Sửa lại" (redo) link.
+   - Upcoming sentences show only a placeholder, never their text.
+3. Real-time word diff under the current input, updated as the user types:
+   - correct: green
+   - wrong: red with a wavy underline
+   - extra: red with a strikethrough
+   - missing: a red "___" gap in place
+   - pending (a word still being typed that matches so far): neutral grey
+   - Never reveal the correct word unless the user asks for a hint or the answer.
+   - Color must not be the only signal: use underline/strike styles plus icons, and meet WCAG AA contrast.
+4. Live score for the sentence (e.g. "86%") and a toggle "Bắt lỗi dấu câu" (strict punctuation, off by default).
+5. Helpers: "Gợi ý" (reveals the next correct word), "Hiện đáp án" (reveals the sentence; the sentence is then marked as revealed), and "Xem bản dịch" (shows the Vietnamese translation of the current sentence, hidden by default).
+6. A small "Đã lưu" / "Chưa lưu" (saved / not saved) sync indicator for offline autosave.
+7. Keyboard-first flow. Show shortcut hints: Ctrl+Enter replay, Ctrl+' play/pause, Ctrl+. next, Ctrl+, previous, Ctrl+/ hint, Enter to go to the next sentence when the current one is 100% correct.
+
+Workspace states to show:
+- Mid-typing with mixed diff states
+- A sentence at 100%
+- A revealed sentence
+- Translation visible
+- A-B loop active
+- Audio failed to load (error message with retry)
+- Offline "Chưa lưu"
+- Mobile layout
+
+## Word lookup popover
+In completed sentences, words become clickable. Clicking one opens a popover with:
+- The word, its lemma, US IPA and part of speech
+- The Vietnamese meaning in this context, plus one alternative meaning
+- The original sentence with the word highlighted, and a ▶ button to replay that sentence
+- A "Lưu từ" (save word) button
+
+Show these states: loading (up to ~3s), loaded, "Đã có trong sổ" (already saved), and error/rate-limited.
+
+## Other learner screens
+1. Library:
+   - Lesson cards: title, topic, level, duration (mm:ss), sentence count, source, and for logged-in users progress % and best score.
+   - Filters: topic (Talks, News, Interviews, Everyday conversation) and level (Beginner, Intermediate, Advanced), with multi-select chips.
+   - Search, pagination, and an empty state with a "Xoá bộ lọc" (clear filters) button.
+2. Lesson detail:
+   - Metadata and source/license attribution (for example "Source: VOA Learning English — Public domain").
+   - Primary action that changes with progress: "Bắt đầu" (start), "Tiếp tục câu N" (continue at sentence N) or "Làm lại" (redo).
+   - The transcript is hidden until the lesson is finished.
+3. Lesson summary, after the last sentence:
+   - Overall score, sentences revealed, hints used, time spent, and words saved in this lesson.
+   - Buttons: view the full transcript with the Vietnamese translation, redo, and next lesson at the same level.
+4. Dashboard (home after login):
+   - A prominent "Tiếp tục học" (continue learning) card.
+   - A due-words count with a "Ôn tập ngay" (review now) button.
+   - Current and longest streak.
+   - The 5 most recent lessons with best scores.
+5. Vocabulary notebook:
+   - Search, filters (Tất cả = all, Đến hạn = due, Mới = new) and sorting.
+   - Each row: word, meaning, due date, and a link to the source lesson.
+   - Edit the meaning and add a personal note; delete with confirmation.
+6. Review session (flashcards):
+   - Front: word, IPA, and a play button for the context sentence.
+   - Back: meaning, part of speech, the context sentence with the word highlighted, and the note.
+   - Four rating buttons (Again / Hard / Good / Easy, keys 1–4), each showing the next interval (e.g. "10 phút", "3 ngày").
+   - A "done for today" state that shows tomorrow's due count.
+7. History: all started lessons with status, progress, best score and last studied date.
+8. Auth: a "Đăng nhập với Google" button. Also design an optional variant with an email magic-link field and a "Kiểm tra email" (check your email) confirmation state.
+9. Settings:
+   - Display name, timezone, default playback speed, default strict punctuation.
+   - Daily email reminder toggle and time.
+   - Danger zone: delete account, confirmed by typing your email.
+10. Global header with a due-words badge on the "Ôn tập" (review) nav item and a streak indicator.
+
+## Admin screens (desktop only, utilitarian)
+1. Lesson list with status chips: draft, processing, review, published, failed, unpublished. Processing rows auto-refresh; failed rows show an error message and a "Chạy lại" (retry) button.
+2. Create lesson form: title, topic, level, source name, source URL, license (required), audio upload (mp3/m4a/wav, ≤30MB, ≤15 min), transcript textarea.
+3. Segment review table:
+   - Columns: index, English text, Vietnamese translation, start/end in ms, and a ▶ button to play that segment.
+   - Rows flagged "needs attention" are highlighted.
+   - Inline editing of text, translation and timing.
+   - Merge with the next segment; split at a chosen word.
+   - Publish / unpublish.
+   - On a published lesson, merge and split are disabled with a tooltip explaining that the lesson must be unpublished first.
+
+## Deliverables
+- A small design system: color tokens (light and dark), type scale, spacing, and the diff-state styles.
+- High-fidelity designs for every screen above, desktop plus mobile (360px) for learner screens, including the listed states.
+- Interaction notes for the player (auto-pause, A-B loop) and the diff-as-you-type behavior.
+
+Use this sample content in the workspace:
+Sentence 3: "Scientists say the new study could change how we think about sleep."
+User typed: "Scientist say the study could changed how we thin"
+Vietnamese translation: "Các nhà khoa học nói rằng nghiên cứu mới có thể thay đổi cách chúng ta nghĩ về giấc ngủ."
