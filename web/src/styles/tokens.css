@@ -1,0 +1,138 @@
+/* Dictation design tokens — light + dark.
+   Mapping cho tailwind.config.ts (phase 1 bước 5):
+
+   theme.extend.colors = {
+     bg: "var(--bg)", surface: "var(--surface)", "surface-2": "var(--surface-2)", raise: "var(--raise)",
+     ink: { DEFAULT: "var(--ink)", 2: "var(--ink-2)", 3: "var(--ink-3)" },
+     line: { DEFAULT: "var(--line)", 2: "var(--line-2)" },
+     accent: { DEFAULT: "var(--accent)", soft: "var(--accent-soft)", ink: "var(--accent-ink)" },
+     ok: { DEFAULT: "var(--ok)", soft: "var(--ok-soft)" },
+     bad: { DEFAULT: "var(--bad)", soft: "var(--bad-soft)" },
+     warn: { DEFAULT: "var(--warn)", soft: "var(--warn-soft)" },
+     pend: { DEFAULT: "var(--pend)", soft: "var(--pend-soft)" },
+   }
+   theme.extend.fontFamily = { sans: ["'Be Vietnam Pro'", "system-ui", "sans-serif"],
+                               serif: ["Newsreader", "serif"], mono: ["'IBM Plex Mono'", "monospace"] }
+*/
+
+:root {
+  /* nền & mực — bàn học giấy ấm */
+  --bg: #f4f1ea;
+  --surface: #fbfaf6;
+  --surface-2: #efebe1;
+  --raise: #ffffff;
+  --ink: #211e19;
+  --ink-2: #4e483e;
+  --ink-3: #857d70;
+  --line: #dcd6c9;
+  --line-2: #c9c1b1;
+
+  --accent: #2c5c55;
+  --accent-soft: #eaf1ef;
+  --accent-ink: #1e443f;
+
+  /* trạng thái diff */
+  --ok: #1c6b43;
+  --ok-soft: #e6f1e9;
+  --bad: #a72b22;
+  --bad-soft: #f8e9e6;
+  --warn: #8a5b12;
+  --warn-soft: #f7eeddff;
+  --pend: #6e675b;
+  --pend-soft: #ede9e0;
+
+  /* thang chữ */
+  --text-display: 2.5rem;   /* 40 — tiêu đề trang */
+  --text-title: 1.5rem;     /* 24 */
+  --text-sentence: 1.375rem; /* 22 — câu tiếng Anh (Newsreader) */
+  --text-body: 0.9375rem;   /* 15 */
+  --text-label: 0.8125rem;  /* 13 */
+  --text-meta: 0.75rem;     /* 12 */
+
+  /* spacing 4/8/12/16/24/32/48 · radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+.dark {
+  --bg: #17160f;
+  --surface: #1f1e17;
+  --surface-2: #292720;
+  --raise: #262419;
+  --ink: #f0ebdf;
+  --ink-2: #c8c1b2;
+  --ink-3: #948c7c;
+  --line: #3a372c;
+  --line-2: #4b4738;
+
+  --accent: #7fc0b3;
+  --accent-soft: #22332f;
+  --accent-ink: #c2e6de;
+
+  --ok: #86c99b;
+  --ok-soft: #1e2e23;
+  --bad: #ee9a8e;
+  --bad-soft: #33211e;
+  --warn: #d9ae6a;
+  --warn-soft: #2e2617;
+  --pend: #a29a8a;
+  --pend-soft: #26241c;
+}
+
+/* nền trang + link mặc định (chưa có link nào trong UI vẫn phải khai) */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
+  text-wrap: pretty;
+}
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+
+/* kiểu gạch của từng trạng thái diff — dùng chung cho diff-view và màn tổng kết.
+   Màu KHÔNG phải tín hiệu duy nhất (NFR-07). */
+.diff-token {
+  padding: 2px 7px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+.diff-correct {
+  color: var(--ok);
+  background: var(--ok-soft);
+  border-bottom: 2px solid var(--ok);
+}
+.diff-wrong {
+  color: var(--bad);
+  background: var(--bad-soft);
+  text-decoration: underline wavy var(--bad);
+  text-underline-offset: 4px;
+}
+.diff-extra {
+  color: var(--bad);
+  background: var(--bad-soft);
+  text-decoration: line-through 2px;
+}
+.diff-missing {
+  color: var(--bad);
+  background: var(--bad-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+.diff-pending {
+  color: var(--pend);
+  background: var(--pend-soft);
+  border-bottom: 2px dotted var(--pend);
+}
+.diff-revealed {
+  color: var(--warn);
+  background: var(--warn-soft);
+  border-bottom: 2px dashed var(--warn);
+}
