@@ -1,10 +1,11 @@
 ---
 phase: 2
-title: "Auth and content ingestion"
-status: pending
+title: Auth and content ingestion
+status: in-progress
 priority: P1
-effort: "5-7d"
-dependencies: [1]
+effort: 5-7d
+dependencies:
+  - 1
 ---
 
 # Phase 2: Auth and content ingestion

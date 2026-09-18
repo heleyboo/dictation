@@ -10,10 +10,18 @@ dependencies = [
     "asyncpg",
     "alembic",
     "pydantic-settings",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
+    "pydantic[email]>=2.13.5",
 ]
 
 [dependency-groups]
-dev = ["pytest", "pytest-asyncio", "httpx", "ruff", "mypy"]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+]
 # Forced alignment (stable-ts + torch CPU); installed only in the worker image.
 # torch is listed directly so the CPU-only index below applies (uv sources only affect direct deps).
 alignment = ["stable-ts", "torch", "torchaudio"]

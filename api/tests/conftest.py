@@ -7,6 +7,7 @@ migrations are exercised by every test run.
 import asyncio
 import os
 from collections.abc import AsyncIterator, Iterator
+from typing import TYPE_CHECKING
 
 import pytest
 from alembic.config import Config
@@ -48,7 +49,7 @@ def migrated_database() -> Iterator[None]:
 async def engine() -> AsyncIterator[AsyncEngine]:
     eng = create_async_engine(TEST_DATABASE_URL)
     async with eng.begin() as conn:
-        await conn.execute(text("TRUNCATE jobs RESTART IDENTITY"))
+        await conn.execute(text("TRUNCATE jobs, users, sessions, magic_links RESTART IDENTITY CASCADE"))
     yield eng
     await eng.dispose()
 
@@ -56,3 +57,16 @@ async def engine() -> AsyncIterator[AsyncEngine]:
 @pytest.fixture
 def sessions(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:
     return async_sessionmaker(engine, expire_on_commit=False)
+
+
+@pytest.fixture
+async def harness(sessions: async_sessionmaker[AsyncSession]) -> AsyncIterator["Harness"]:
+    from tests.support import build_harness
+
+    h = build_harness(sessions)
+    async with h.client:
+        yield h
+
+
+if TYPE_CHECKING:
+    from tests.support import Harness
