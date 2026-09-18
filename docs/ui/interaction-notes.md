@@ -20,17 +20,17 @@
 - Seek thủ công trong vùng lặp không tắt loop; seek ra ngoài thì loop vẫn giữ (lần tới B vẫn nhảy về A).
 
 ## Diff khi đang gõ
-- Debounce 120 ms cho việc chấm; input vẫn cập nhật ngay (controlled) để không có cảm giác trễ.
-- Chuẩn hoá: `trim` + bỏ dấu câu + lowercase khi `strict = false`; `strict = true` so nguyên văn.
+- Chấm lại ngay mỗi keystroke, không debounce (AC-M5-02.1 ≤ 50 ms); input controlled.
+- Chuẩn hoá (SRS §M5): luôn NFC, nháy cong → thẳng, gạch nối tách từ, không phân biệt hoa/thường; `strict = true` chỉ thêm việc so dấu câu.
 - Chỉ từ cuối cùng (khi input không kết thúc bằng khoảng trắng) là "đang gõ": khớp tiền tố → `pending`
   (xám trung tính), không khớp → `wrong`.
 - **Không lộ đáp án:** bỏ toàn bộ ô `missing` ở cuối chuỗi — nếu không, số ô trống sẽ tiết lộ còn bao nhiêu từ.
   Ô `missing` chỉ xuất hiện khi người học đã gõ vượt qua vị trí đó.
-- Điểm = `correct / số từ câu gốc`, làm tròn; nhãn cột phải: "N đúng · N sai · N chưa gõ" (chưa gõ = từ chưa
+- Điểm = `correct / (số từ câu gốc + số từ thừa)`, làm tròn (AC-M5-03.1); nhãn cột phải: "N đúng · N sai · N chưa gõ" (chưa gõ = từ chưa
   tới, không phải ô trống).
 - Gợi ý: sửa đúng một từ ở vị trí lỗi đầu tiên (hoặc chèn vào ô trống đầu tiên), giữ nguyên phần còn lại;
   không thêm khoảng trắng cuối nếu người học đang gõ giữa từ. Tăng `hints_used`.
-- Hiện đáp án: toàn bộ câu chuyển `revealed`, điểm "—", câu được đánh dấu `revealed = true` trong attempt và
+- Hiện đáp án: toàn bộ câu chuyển `revealed`, giữ điểm ngay trước khi hiện (nhãn "đã hiện đáp án", AC-M5-04.2), câu được đánh dấu `revealed = true` trong attempt và
   đếm vào màn tổng kết.
 - `Enter` trong ô nhập chỉ sang câu sau khi đạt 100%; bỏ qua khi `isComposing` (IME Telex/VNI).
 

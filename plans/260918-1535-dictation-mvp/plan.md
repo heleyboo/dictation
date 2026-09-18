@@ -73,3 +73,17 @@ Propagation: SRS v1.1 (§1.5, AC-M2-02.2, AC-M2-04.1, AC-M2-04.3, AC-M7-04.6, §
 - Decision deltas checked: 4
 - Reconciled stale references: 12 (mọi "WhisperX" trong plan/SRS; quy tắc sửa bài published; trạng thái publish lại; cờ email)
 - Unresolved contradictions: 0 — mâu thuẫn magic link cần domain email đã giải quyết: user chọn đặt magic link sau cờ `MAGIC_LINK_ENABLED` (SRS AC-M1-02.4; phase-02, phase-06 cập nhật; e2e dùng Google fake).
+
+### Session 2 — 2026-09-18 (UI handoff reconciliation)
+Nguồn: gói handoff `Form configuration decisions.zip` (commit b042ee3) so với SRS v1.1. User duyệt đề xuất:
+- Giữ SRS: điểm `correct / (expected + extra)`; revealed giữ điểm trước khi reveal; chuẩn hoá luôn case-insensitive + nháy cong + gạch nối; chấm không debounce; transcript bắt buộc (bỏ ASR tự tách).
+- Theo handoff: không hiện ô trống cho từ chưa gõ tới (AC-M5-02.2/02.3); gợi ý sửa đúng 1 từ (AC-M5-04.1); `GET /lookup?word&segment_id`; thư mục `features/{vocabulary,review,dashboard,history}`.
+- Ngoài phạm vi (SRS §1.4): ♡ yêu thích, "ôn thêm" thẻ chưa đến hạn, ASR tự tách.
+- Nợ code handoff ghi vào phase 3: 18/≥30 test, listener `error`/`loadedmetadata`, `durationMs`, validate A-B.
+Propagation: SRS v1.2 · phase-01 (dựng khung quanh code handoff) · phase-03 · phase-04 · phase-05 · docs/ui/{interaction-notes,component-map,handoff-readme}.md.
+
+### Whole-Plan Consistency Sweep (session 2)
+- Decision deltas checked: 9
+- Files grepped: plan.md, phase-01..06, docs/srs-mvp.md, docs/ui/*.md
+- Reconciled stale references: 14 (lookup method, thư mục vocab/retention, công thức điểm, revealed "—", debounce 120 ms, chuẩn hoá strict, ASR, ♡, ôn thêm, số test)
+- Unresolved contradictions: 0

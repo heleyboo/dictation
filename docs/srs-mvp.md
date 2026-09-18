@@ -1,6 +1,7 @@
 # SRS — Dictation Web App (MVP)
 
-- Phiên bản: 1.1 · Ngày: 2026-09-18 · Trạng thái: Approved (brainstorm + plan validation)
+- Phiên bản: 1.2 · Ngày: 2026-09-18 · Trạng thái: Approved (brainstorm + plan validation + UI handoff)
+- UI handoff: `docs/ui/` (component map, interaction notes) + code khởi đầu trong `web/src/`; khi lệch, SRS là nguồn sự thật.
 - Nguồn quyết định: `plans/reports/brainstorm-260918-1535-dictation-mvp-srs-report.md`
 - Quy ước ID: `FR-<module>-<nn>` (yêu cầu), `AC-<module>-<nn>.<k>` (tiêu chí chấp nhận), `NFR-<nn>`. AC viết dạng Given/When/Then; mọi AC phải kiểm chứng được bằng test tự động hoặc bước manual ghi rõ.
 - Từ khoá: **PHẢI** = bắt buộc MVP; **NÊN** = làm nếu không tăng scope; **KHÔNG** = cấm.
@@ -30,7 +31,7 @@ Webapp luyện nghe tiếng Anh bằng chép chính tả (dictation) cho ngườ
 | M7 | Retention (tiến độ, streak, nhắc ôn, email) |
 
 ### 1.4 Ngoài phạm vi (KHÔNG làm trong MVP)
-Payment/gói trả phí · app mobile native · nhúng TED/YouTube hoặc nội dung không rõ license · leaderboard/huy hiệu/điểm XP · push notification · learner tự upload bài · chấm phát âm/speaking · UI đa ngôn ngữ (chỉ tiếng Việt) · scraper tự động VOA · tương đương số–chữ ("5" ≡ "five") và tương đương contraction ("don't" ≡ "do not") · chỉnh waveform trực quan trong admin · social/share.
+Payment/gói trả phí · app mobile native · nhúng TED/YouTube hoặc nội dung không rõ license · leaderboard/huy hiệu/điểm XP · push notification · learner tự upload bài · chấm phát âm/speaking · tự nhận dạng transcript (ASR) khi admin không nhập transcript · yêu thích/♡ bài học · "ôn thêm" thẻ chưa đến hạn · UI đa ngôn ngữ (chỉ tiếng Việt) · scraper tự động VOA · tương đương số–chữ ("5" ≡ "five") và tương đương contraction ("don't" ≡ "do not") · chỉnh waveform trực quan trong admin · social/share.
 
 ### 1.5 Ràng buộc kỹ thuật (non-negotiable)
 | Hạng mục | Lựa chọn |
@@ -162,20 +163,20 @@ Vòng đời bài: `draft → processing → review → published` (+ `failed`, 
 
 **FR-M5-02 Diff real-time.**
 - AC-M5-02.1 Diff cấp từ dựa trên LCS/Myers giữa token kịch bản và token input; chạy hoàn toàn client-side, cập nhật sau mỗi keystroke ≤ 50 ms cho segment ≤ 60 từ (đo trên laptop tầm trung).
-- AC-M5-02.2 Trạng thái token: `correct` (xanh + không gạch), `wrong` (đỏ + gạch chân lượn sóng), `extra` (đỏ + gạch ngang), `missing` (placeholder `___` màu đỏ chèn đúng vị trí). Màu KHÔNG là tín hiệu duy nhất (có kiểu gạch/biểu tượng).
-- AC-M5-02.3 KHÔNG lộ đáp án: `wrong`/`missing` không hiển thị từ đúng trừ khi dùng Gợi ý/Hiện đáp án.
+- AC-M5-02.2 Trạng thái token: `correct` (xanh + không gạch), `wrong` (đỏ + gạch chân lượn sóng), `extra` (đỏ + gạch ngang), `missing` (placeholder `___` màu đỏ chèn đúng vị trí), `pending` (xám, chấm gạch), `revealed` (vàng, gạch đứt). Ô `missing` CHỈ hiện ở vị trí learner đã gõ vượt qua; từ chưa gõ tới ở cuối câu KHÔNG hiện ô trống (tránh lộ số từ còn lại). Màu KHÔNG là tín hiệu duy nhất (có kiểu gạch/biểu tượng).
+- AC-M5-02.3 KHÔNG lộ đáp án: `wrong`/`missing` không hiển thị từ đúng, và UI không để lộ số từ còn lại của câu, trừ khi dùng Gợi ý/Hiện đáp án.
 - AC-M5-02.4 Token cuối đang gõ dở (chưa có khoảng trắng sau) mà là prefix của từ kỳ vọng tại vị trí đó → trạng thái `pending` (xám), không tô đỏ.
-- AC-M5-02.5 Bộ test bảng (≥ 30 case) cho engine diff, gồm: hoa/thường, nháy cong, gạch nối, contraction, từ lặp, thiếu từ đầu/giữa/cuối, thừa từ, đảo từ, strict ON/OFF, input rỗng, chỉ dấu câu.
+- AC-M5-02.5 Bộ test bảng (≥ 30 case) cho engine diff, gồm: hoa/thường, nháy cong, gạch nối, contraction, từ lặp, thiếu từ đầu/giữa/cuối, thừa từ, đảo từ, strict ON/OFF, input rỗng, chỉ dấu câu, không hiện ô trống cho từ chưa gõ tới, gợi ý (sửa 1 từ / điền ô trống / thêm từ kế), revealed.
 
 **FR-M5-03 Chấm điểm.**
-- AC-M5-03.1 Điểm segment = `correct / (expected + extra)` làm tròn %, hiển thị live.
+- AC-M5-03.1 Điểm segment = `correct / (expected + extra)` làm tròn %, hiển thị live, tính lại ngay mỗi keystroke (không debounce phần chấm). Cột điểm hiển thị thêm "N đúng · N sai · N chưa gõ" (chưa gõ = từ chưa tới, không tính là lỗi).
 - AC-M5-03.2 Segment `completed` khi đạt 100%; khi đó hiện ✓, Enter → sang segment kế và (nếu Auto-pause) tự phát segment kế.
 - AC-M5-03.3 Điểm bài = tổng `correct` / tổng `(expected + extra)` của mọi segment, tính theo lần nộp tốt nhất mỗi segment; lưu `best_score` cho bài.
 - AC-M5-03.4 Đổi Strict punctuation giữa chừng → tính lại diff/điểm segment hiện tại ngay; điểm lưu kèm cờ `strict` đang dùng.
 
 **FR-M5-04 Trợ giúp.**
-- AC-M5-04.1 "Gợi ý" (`Ctrl+/`): hiện từ kỳ vọng đầu tiên chưa đúng; mỗi lần dùng tăng `hints_used` của segment.
-- AC-M5-04.2 "Hiện đáp án": hiện toàn bộ câu; segment đánh dấu `revealed`, điểm segment ghi nhận = điểm ngay trước khi reveal; user vẫn có thể gõ lại để luyện nhưng điểm không tăng.
+- AC-M5-04.1 "Gợi ý" (`Ctrl+/`): sửa đúng MỘT từ tại vị trí lỗi đầu tiên (thay từ sai hoặc điền ô trống; nếu tất cả đang đúng thì thêm từ kế tiếp), giữ nguyên phần còn lại learner đã gõ; mỗi lần dùng tăng `hints_used` của segment.
+- AC-M5-04.2 "Hiện đáp án": hiện toàn bộ câu; segment đánh dấu `revealed`, điểm segment ghi nhận = điểm ngay trước khi reveal (UI hiện điểm đó kèm nhãn "đã hiện đáp án", không hiện "—"); user vẫn có thể gõ lại để luyện nhưng điểm không tăng.
 - AC-M5-04.3 "Xem bản dịch": bật/tắt hiển thị `translation_vi` của segment hiện tại bất kỳ lúc nào (mặc định ẩn); lựa chọn nhớ trong phiên.
 
 **FR-M5-05 Lưu tiến độ.**
@@ -280,7 +281,7 @@ Vòng đời bài: `draft → processing → review → published` (+ `failed`, 
 | Auth | `GET /auth/google/start`, `GET /auth/google/callback`, `POST /auth/magic-link`, `GET /auth/magic-link/verify`, `POST /auth/logout`, `GET /me`, `PATCH /me`, `DELETE /me` |
 | Lessons | `GET /lessons?topic&level&q&page`, `GET /lessons/{slug}`, `GET /lessons/{slug}/segments` (text chỉ trả khi user đã completed/revealed segment đó hoặc đã xong bài; luôn trả timing) |
 | Progress | `GET /progress`, `PUT /lessons/{id}/progress`, `PUT /segments/{id}/attempt` |
-| Vocab | `POST /lookup` {segment_id, word}, `GET /vocab?filter&q&sort&page`, `POST /vocab`, `PATCH /vocab/{id}`, `DELETE /vocab/{id}`, `GET /reviews/due`, `POST /reviews/{vocab_id}` {rating} |
+| Vocab | `GET /lookup?word&segment_id`, `GET /vocab?filter&q&sort&page`, `POST /vocab`, `PATCH /vocab/{id}`, `DELETE /vocab/{id}`, `GET /reviews/due`, `POST /reviews/{vocab_id}` {rating} |
 | Dashboard | `GET /dashboard` (continue, due_count, streak, recent) |
 | Email | `GET /email/unsubscribe?token` |
 | Admin | `POST /admin/lessons` (multipart), `GET /admin/lessons`, `GET/PATCH /admin/lessons/{id}`, `POST /admin/lessons/{id}/retry`, `PATCH /admin/segments/{id}`, `POST /admin/segments/{id}/split`, `POST /admin/segments/merge`, `POST /admin/lessons/{id}/publish`, `POST /admin/lessons/{id}/unpublish` |

@@ -17,6 +17,7 @@ Dựng monorepo chạy được end-to-end rỗng: web gọi api `/healthz`, api
 - `docker compose up` khởi động web · api · worker · postgres (+ minio ở dev thay R2).
 
 ## Architecture
+- `web/src/` đã có code UI handoff (`features/dictation/*`, `features/player/*`, `styles/tokens.css`, xem `docs/ui/handoff-readme.md`): dựng Vite/Tailwind/shadcn quanh các file này, không ghi đè. Import `tokens.css` sau `tailwind.css` trong `main.tsx`; thêm mapping màu/font (comment đầu `tokens.css`) vào cấu hình Tailwind; cài shadcn `button, switch, popover, toggle-group` + `clsx`; alias `@/` → `web/src`. <!-- Updated: UI handoff -->
 - `api` và `worker` cùng package `api/app`; khác entrypoint (`uvicorn app.main:app` vs `python -m app.worker`).
 - Dockerfile multi-target: `api` (slim) và `worker` (thêm dependency group `alignment`: stable-ts/torch CPU) để image API không kéo torch.
 - Job queue: bảng `jobs`; worker loop `SELECT … FOR UPDATE SKIP LOCKED LIMIT 1` mỗi 2 s; handler registry theo `type`.

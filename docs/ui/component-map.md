@@ -29,7 +29,7 @@ vào thẻ câu hiện tại, chip player cuộn ngang, hit target ≥ 44px.
 thanh tiến độ + "Tiến độ N% · Điểm tốt nhất N%", CTA đổi theo tiến độ. Empty: nêu bộ lọc đang áp + "Xoá bộ lọc".
 
 ## Chi tiết bài (05) — `web/src/features/library/lesson-detail.tsx`
-2 cột: nội dung + cột phải 340px (tiến độ, CTA chính, Làm lại, ♡, chip từ đã lưu). Bắt buộc khối
+2 cột: nội dung + cột phải 340px (tiến độ, CTA chính, Làm lại, chip từ đã lưu — ♡ ngoài phạm vi MVP). Bắt buộc khối
 "Nguồn & giấy phép" (`Source: … — Public domain`). Transcript ẩn tới khi xong: card gạch đứt + "Mở khoá ở câu N/N".
 
 ## Tổng kết (06) — `web/src/features/dictation/summary.tsx`
@@ -49,7 +49,7 @@ Xoá = Dialog xác nhận nêu rõ mất tiến độ ôn.
 ## Ôn tập (07) — `web/src/features/review/review-session.tsx`
 Mặt trước: từ (40px serif) + IPA + ▶ câu ví dụ + "Hiện nghĩa (Space)". Mặt sau: nghĩa · từ loại · câu ví dụ
 highlight · ghi chú · 4 nút `Lại/Khó/Tốt/Dễ` (phím 1–4) mỗi nút in khoảng cách kế tiếp từ FSRS ("10 phút",
-"3 ngày"). Xong: "Hết từ đến hạn" + số từ đến hạn mai + "Ôn thêm 10 từ sắp tới".
+"3 ngày"). Xong: "Hết từ đến hạn" + số từ đến hạn mai ("Ôn thêm" thẻ chưa đến hạn: ngoài phạm vi MVP).
 
 ## Lịch sử (08) — `web/src/features/history/history-page.tsx`
 Table: bài · trạng thái (Badge: Đang học / Đã xong / Mới mở) · tiến độ (bar + %) · điểm tốt nhất · lần cuối.
@@ -68,7 +68,7 @@ Nhắc học qua email (Switch + giờ) · Vùng nguy hiểm (viền `bad`, gõ 
   processing hiện % và tự làm mới 5s (`refetchInterval`); hàng failed nền `bad-soft` + log lỗi mono + "Chạy lại".
 - `lesson-create-form.tsx`: tiêu đề, chủ đề, trình độ, tên nguồn, URL nguồn, **giấy phép bắt buộc** (viền `bad`
   + thông báo khi trống), upload audio (mp3/m4a/wav ≤ 30 MB ≤ 15 phút, hiện tên/size/thời lượng/bitrate),
-  transcript textarea (trống → ASR tự tách).
+  transcript textarea (bắt buộc; trống → lỗi validation, AC-M2-01.3 — ASR tự tách ngoài phạm vi MVP).
 - `segment-review-table.tsx`: cột `# · ▶ · English · Bản dịch · start · end · action`; hàng "cần xem" nền
   `warn-soft` + lý do; inline edit text/dịch/timing (kiểm tra chồng lấn dòng kề); Gộp/Tách **disabled +
   Tooltip "Phải bỏ đăng bài trước"** khi `published`; Publish / Unpublish.

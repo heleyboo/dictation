@@ -8,7 +8,7 @@ Nguồn thiết kế: `Dictation.dc.html` trong project Omelette (canvas đặc 
 | Đường dẫn trong gói | Copy vào repo | Trạng thái |
 |---|---|---|
 | `web/src/styles/tokens.css` | `web/src/styles/tokens.css` | code chạy được |
-| `web/src/features/dictation/diff/*` | cùng đường dẫn | code + 34 test case |
+| `web/src/features/dictation/diff/*` | cùng đường dẫn | code + 18 test case (bổ sung lên ≥ 30 ở phase 3) |
 | `web/src/features/dictation/{diff-view,segment-input}.tsx` | cùng đường dẫn | code chạy được |
 | `web/src/features/dictation/shortcuts.ts` | cùng đường dẫn | code chạy được |
 | `web/src/features/player/{use-segment-player.ts,player-bar.tsx}` | cùng đường dẫn | code chạy được |
@@ -30,4 +30,4 @@ Tất cả file TS/TSX viết cho React 19 + TS strict + Tailwind + shadcn/ui nh
 - Không bao giờ lộ từ đúng trừ khi người học bấm **Gợi ý** / **Hiện đáp án** — kể cả số lượng từ còn lại (không hiện ô `___` cho những từ chưa gõ tới). Xem test `does not leak unreached words`.
 - **Gợi ý** chỉ sửa đúng một từ tại vị trí lỗi đầu tiên (hoặc chèn vào ô thiếu), giữ nguyên phần còn lại người học đã gõ.
 - Màu không phải tín hiệu duy nhất: mỗi trạng thái có kiểu gạch riêng + `title`/`aria-label` tiếng Việt (NFR-07).
-- Điểm câu = `correct / expected.length`, làm tròn; câu đã hiện đáp án → điểm `—`, không tính.
+- ~~Điểm câu = `correct / expected.length`; câu đã hiện đáp án → điểm `—`~~ → thay bởi SRS v1.2: `correct / (expected + extra)`, câu đã hiện đáp án giữ điểm trước khi hiện (AC-M5-03.1, AC-M5-04.2). Code trong `web/src` sửa ở phase 3.

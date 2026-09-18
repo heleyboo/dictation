@@ -26,7 +26,7 @@ Dashboard "tiếp tục học", lịch sử, streak theo múi giờ user, badge 
 
 ## Related Code Files
 - Create (api): `app/models/email_log.py`, migration, `app/routers/{dashboard,email}.py`, `app/services/{streak,dashboard,reminders,unsubscribe_token}.py`, `app/worker/handlers/schedule_reminders.py`, `app/templates/email/daily-reminder.{html,txt}.j2`
-- Create (web): `src/features/retention/{dashboard-page.tsx,history-page.tsx,due-badge.tsx}`, `src/routes/unsubscribed.tsx`
+- Create (web): `src/features/dashboard/{dashboard-page.tsx,due-badge.tsx}`, `src/features/history/history-page.tsx`, `src/routes/unsubscribed.tsx` (layout theo `docs/ui/component-map.md`)
 - Tests: `api/tests/{test_streak,test_dashboard,test_reminders,test_unsubscribe}.py`
 
 ## Implementation Steps
