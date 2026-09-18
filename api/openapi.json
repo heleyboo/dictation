@@ -1734,10 +1734,17 @@
           {
             "in": "cookie",
             "name": "sid",
-            "required": true,
+            "required": false,
             "schema": {
-              "title": "Sid",
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sid"
             }
           }
         ],

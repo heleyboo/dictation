@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Session, User
@@ -48,8 +48,3 @@ async def resolve_session(db: AsyncSession, token: str, ttl: timedelta) -> tuple
         session.expires_at = now + ttl
         await db.commit()
     return session, user
-
-
-async def revoke_session(db: AsyncSession, token: str) -> None:
-    await db.execute(delete(Session).where(Session.token_hash == hash_token(token)))
-    await db.commit()

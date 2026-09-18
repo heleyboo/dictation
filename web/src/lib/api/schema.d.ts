@@ -1027,8 +1027,8 @@ export interface operations {
                 "x-csrf-token"?: string | null;
             };
             path?: never;
-            cookie: {
-                sid: string;
+            cookie?: {
+                sid?: string | null;
             };
         };
         requestBody?: never;

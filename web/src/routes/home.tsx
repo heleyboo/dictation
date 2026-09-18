@@ -16,7 +16,7 @@ export function HomePage() {
   });
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-4 px-4">
+    <main className="mx-auto flex max-w-xl flex-col gap-4 px-4 py-16">
       <h1 className="font-serif text-4xl text-ink">Dictation</h1>
       <p className="text-ink-2">Luyện nghe tiếng Anh bằng chép chính tả.</p>
       <p role="status" className="font-mono text-sm">

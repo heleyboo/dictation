@@ -13,7 +13,7 @@ from app.deps import SESSION_COOKIE, AuthDep, DbDep, GoogleDep, MailerDep, Setti
 from app.models import User
 from app.services import magic_links
 from app.services.oauth_google import OAuthError, authorization_url
-from app.services.sessions import create_session, revoke_session
+from app.services.sessions import create_session
 from app.services.tokens import new_token, safe_return_to
 from app.services.users import get_or_create_user
 
@@ -157,9 +157,7 @@ async def verify_magic_link(
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(
-    auth: AuthDep, db: DbDep, response: Response, sid: Annotated[str, Cookie(alias=SESSION_COOKIE)]
-) -> None:
-    del auth  # dependency enforces login + CSRF
-    await revoke_session(db, sid)
+async def logout(auth: AuthDep, db: DbDep, response: Response) -> None:
+    await db.delete(auth.session)
+    await db.commit()
     response.delete_cookie(SESSION_COOKIE, path="/")
