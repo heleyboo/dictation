@@ -1,7 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
+.venv/
 /.pnp
 .pnp.*
 .yarn/*
@@ -12,6 +13,12 @@
 
 # testing
 /coverage
+
+# python tooling caches
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # next.js
 /.next/
@@ -32,8 +39,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# package manager
-package-lock.json
+# package manager (npm lockfile is committed; other managers are not used)
 yarn.lock
 pnpm-lock.yaml
 

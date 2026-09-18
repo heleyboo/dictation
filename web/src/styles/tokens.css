@@ -42,12 +42,12 @@
   --pend-soft: #ede9e0;
 
   /* thang chữ */
-  --text-display: 2.5rem;   /* 40 — tiêu đề trang */
-  --text-title: 1.5rem;     /* 24 */
+  --text-display: 2.5rem; /* 40 — tiêu đề trang */
+  --text-title: 1.5rem; /* 24 */
   --text-sentence: 1.375rem; /* 22 — câu tiếng Anh (Newsreader) */
-  --text-body: 0.9375rem;   /* 15 */
-  --text-label: 0.8125rem;  /* 13 */
-  --text-meta: 0.75rem;     /* 12 */
+  --text-body: 0.9375rem; /* 15 */
+  --text-label: 0.8125rem; /* 13 */
+  --text-meta: 0.75rem; /* 12 */
 
   /* spacing 4/8/12/16/24/32/48 · radius */
   --radius-sm: 6px;

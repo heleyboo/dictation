@@ -56,8 +56,7 @@ function lcsOps(expected: string[], typed: string[], strict: boolean): RawOp[] {
   for (let k = 0; k < ops.length; k++) {
     const a = ops[k];
     const b = ops[k + 1];
-    const pair =
-      b && ((a.kind === "missing" && b.kind === "extra") || (a.kind === "extra" && b.kind === "missing"));
+    const pair = b && ((a.kind === "missing" && b.kind === "extra") || (a.kind === "extra" && b.kind === "missing"));
     if (pair) {
       const typedOp = a.kind === "extra" ? a : b;
       const expectedOp = a.kind === "missing" ? a : b;
@@ -100,6 +99,9 @@ export function diffWords(expected: string[], typedText: string, options: DiffOp
     const consumed = tokens.reduce((n, t) => n + (t.status === "extra" ? 0 : 1), 0);
     const want = expected[consumed];
     if (!want) tokens.push({ status: "extra", text: inProgress });
+    // gõ trọn từ (kể cả từ cuối câu chưa có khoảng trắng) → đúng luôn, để câu đạt 100% và Enter sang câu sau
+    else if (wordsMatch(inProgress, want, strict))
+      tokens.push({ status: "correct", text: inProgress, expectedIndex: consumed });
     else if (isPrefixOf(inProgress, want, strict))
       tokens.push({ status: "pending", text: inProgress, expectedIndex: consumed });
     else tokens.push({ status: "wrong", text: inProgress, expectedIndex: consumed });

@@ -50,6 +50,8 @@ export interface UseSegmentPlayer {
 export function useSegmentPlayer(audioUrl: string, segments: Segment[], initialIndex = 0): UseSegmentPlayer {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  // Vòng rAF luôn gọi bản `tick` mới nhất (tránh closure cũ khi A/B, tự dừng hay câu hiện tại đổi lúc đang phát).
+  const tickRef = useRef<() => void>(() => {});
   const [state, setState] = useState<PlayerState>("idle");
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
@@ -95,8 +97,12 @@ export function useSegmentPlayer(audioUrl: string, segments: Segment[], initialI
       const nextIdx = segments.findIndex((s) => ms < s.endMs);
       if (nextIdx > -1 && nextIdx !== currentIndex) setCurrentIndex(nextIdx);
     }
-    rafRef.current = requestAnimationFrame(tick);
+    rafRef.current = requestAnimationFrame(() => tickRef.current());
   }, [autoPause, currentIndex, loop, loopSentence, segment, segments]);
+
+  useEffect(() => {
+    tickRef.current = tick;
+  }, [tick]);
 
   const play = useCallback(() => {
     const audio = audioRef.current;
@@ -109,10 +115,10 @@ export function useSegmentPlayer(audioUrl: string, segments: Segment[], initialI
         setError(null);
         setState(loop.aMs !== null && loop.bMs !== null ? "looping" : autoPause ? "playing-segment" : "playing-free");
         stopRaf();
-        rafRef.current = requestAnimationFrame(tick);
+        rafRef.current = requestAnimationFrame(() => tickRef.current());
       })
       .catch(() => setError("Không tải được audio"));
-  }, [autoPause, loop.aMs, loop.bMs, speed, tick]);
+  }, [autoPause, loop.aMs, loop.bMs, speed]);
 
   const seekMs = useCallback((ms: number) => {
     const audio = audioRef.current;
@@ -147,6 +153,16 @@ export function useSegmentPlayer(audioUrl: string, segments: Segment[], initialI
   }, [pause]);
 
   useEffect(() => stopRaf, []);
+
+  // Tổng thời lượng lấy từ metadata của file audio (dùng cho thanh tiến độ khi chưa có segment cuối).
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onMetadata = () => setDurationMs(Number.isFinite(audio.duration) ? audio.duration * 1000 : 0);
+    if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) onMetadata(); // đã có sẵn (cache) trước khi gắn listener
+    audio.addEventListener("loadedmetadata", onMetadata);
+    return () => audio.removeEventListener("loadedmetadata", onMetadata);
+  }, [audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;

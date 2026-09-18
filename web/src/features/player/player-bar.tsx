@@ -46,7 +46,12 @@ export function PlayerBar({ player, segments, saveState }: PlayerBarProps) {
           <Button variant="outline" size="icon" aria-label="Câu trước (Ctrl+,)" onClick={player.prev}>
             ◀◀
           </Button>
-          <Button size="icon" className="size-11 rounded-full" aria-label="Phát hoặc tạm dừng (Ctrl+')" onClick={player.togglePlay}>
+          <Button
+            size="icon"
+            className="size-11 rounded-full"
+            aria-label="Phát hoặc tạm dừng (Ctrl+')"
+            onClick={player.togglePlay}
+          >
             {player.state === "idle" ? "▶" : "❚❚"}
           </Button>
           <Button variant="outline" size="icon" aria-label="Câu sau (Ctrl+.)" onClick={player.next}>
@@ -73,10 +78,20 @@ export function PlayerBar({ player, segments, saveState }: PlayerBarProps) {
 
         <div className="flex items-center gap-1.5 rounded-[9px] border border-line bg-surface-2 py-0.5 pl-2.5 pr-0.5">
           <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-ink-3">Lặp A-B</span>
-          <Button variant={aMs !== null ? "default" : "ghost"} size="sm" onClick={player.setA} aria-pressed={aMs !== null}>
+          <Button
+            variant={aMs !== null ? "default" : "ghost"}
+            size="sm"
+            onClick={player.setA}
+            aria-pressed={aMs !== null}
+          >
             A
           </Button>
-          <Button variant={bMs !== null ? "default" : "ghost"} size="sm" onClick={player.setB} aria-pressed={bMs !== null}>
+          <Button
+            variant={bMs !== null ? "default" : "ghost"}
+            size="sm"
+            onClick={player.setB}
+            aria-pressed={bMs !== null}
+          >
             B
           </Button>
           <Button variant="ghost" size="sm" onClick={player.clearLoop} disabled={!aMs && !bMs}>
@@ -152,7 +167,10 @@ export function PlayerBar({ player, segments, saveState }: PlayerBarProps) {
         </div>
         <span className="font-mono text-xs text-ink-3">{mmss(total)}</span>
         <span
-          className={clsx("inline-flex items-center gap-1.5 text-xs font-medium", saveState === "saved" ? "text-ok" : "text-warn")}
+          className={clsx(
+            "inline-flex items-center gap-1.5 text-xs font-medium",
+            saveState === "saved" ? "text-ok" : "text-warn",
+          )}
         >
           <span className={clsx("size-2 rounded-full", saveState === "saved" ? "bg-ok" : "bg-warn")} />
           {saveState === "saved" ? "Đã lưu" : saveState === "offline" ? "Chưa lưu — sẽ đồng bộ lại" : "Đang lưu…"}

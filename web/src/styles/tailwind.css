@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Class-based dark mode, matching the `.dark` selector in tokens.css. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens live in tokens.css (UI handoff). This maps them to Tailwind utilities
+ * (bg-surface, text-ink-2, border-line, bg-accent-soft, text-ok, ...) and gives shadcn/ui
+ * components the variables they expect, pointed at the same tokens.
+ */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-raise: var(--raise);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-pend: var(--pend);
+  --color-pend-soft: var(--pend-soft);
+
+  /* shadcn/ui semantic colors */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--raise);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--ink-3);
+  --color-popover: var(--raise);
+  --color-popover-foreground: var(--ink);
+  --color-destructive: var(--bad);
+  --color-border: var(--line);
+  --color-input: var(--line-2);
+  --color-ring: var(--accent);
+
+  --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-serif: "Newsreader", serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+}
