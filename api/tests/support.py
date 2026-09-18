@@ -12,6 +12,7 @@ from app.db import get_session
 from app.deps import SESSION_COOKIE, get_google_client, get_mailer
 from app.main import create_app
 from app.models import Role, Session
+from app.routers.admin_lessons import get_storage
 from app.services.mailer import Email
 from app.services.oauth_google import GoogleProfile, OAuthError
 from app.services.sessions import create_session
@@ -24,6 +25,23 @@ class FakeMailer:
 
     async def send(self, email: Email) -> None:
         self.sent.append(email)
+
+
+@dataclass
+class FakeStorage:
+    objects: dict[str, tuple[bytes, str]] = field(default_factory=dict)
+
+    async def put(self, key: str, data: bytes, content_type: str) -> None:
+        self.objects[key] = (data, content_type)
+
+    async def get(self, key: str) -> bytes:
+        return self.objects[key][0]
+
+    async def delete(self, key: str) -> None:
+        self.objects.pop(key, None)
+
+    def public_url(self, key: str) -> str:
+        return f"http://audio.test/{key}"
 
 
 @dataclass
@@ -40,11 +58,10 @@ class FakeGoogle:
         return self.profile
 
 
-def test_settings(**overrides: object) -> Settings:
+def make_settings(**overrides: object) -> Settings:
     base: dict[str, object] = {
         "app_base_url": "http://test",
         "session_secret": "test-secret",
-        "cookie_secure": False,
         "google_client_id": "google-client",
         "google_client_secret": "google-secret",
         "magic_link_enabled": True,
@@ -60,6 +77,7 @@ class Harness:
     settings: Settings
     mailer: FakeMailer
     google: FakeGoogle
+    storage: FakeStorage
 
     async def login(self, email: str = "learner@example.com", role: str = Role.LEARNER) -> str:
         """Create a user + session directly, set the cookie; returns the CSRF token."""
@@ -81,8 +99,8 @@ def _hash(token: str) -> str:
 
 
 def build_harness(sessions: async_sessionmaker[AsyncSession], settings: Settings | None = None) -> Harness:
-    settings = settings or test_settings()
-    mailer, google = FakeMailer(), FakeGoogle()
+    settings = settings or make_settings()
+    mailer, google, storage = FakeMailer(), FakeGoogle(), FakeStorage()
     app = create_app()
 
     async def db_override() -> AsyncIterator[AsyncSession]:
@@ -93,5 +111,20 @@ def build_harness(sessions: async_sessionmaker[AsyncSession], settings: Settings
     app.dependency_overrides[get_settings] = lambda: settings
     app.dependency_overrides[get_mailer] = lambda: mailer
     app.dependency_overrides[get_google_client] = lambda: google
+    app.dependency_overrides[get_storage] = lambda: storage
     client = httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
-    return Harness(client, sessions, settings, mailer, google)
+    return Harness(client, sessions, settings, mailer, google, storage)
+
+
+def wav_bytes(seconds: float, rate: int = 8000) -> bytes:
+    """Silent mono 8-bit WAV of the given length (valid audio for upload tests)."""
+    import io
+    import wave
+
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(1)
+        w.setframerate(rate)
+        w.writeframes(b"\x80" * int(seconds * rate))
+    return buf.getvalue()

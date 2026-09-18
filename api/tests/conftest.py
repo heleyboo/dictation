@@ -49,7 +49,12 @@ def migrated_database() -> Iterator[None]:
 async def engine() -> AsyncIterator[AsyncEngine]:
     eng = create_async_engine(TEST_DATABASE_URL)
     async with eng.begin() as conn:
-        await conn.execute(text("TRUNCATE jobs, users, sessions, magic_links RESTART IDENTITY CASCADE"))
+        await conn.execute(
+            text(
+                "TRUNCATE jobs, users, sessions, magic_links, lessons, segments, llm_usage"
+                " RESTART IDENTITY CASCADE"
+            )
+        )
     yield eng
     await eng.dispose()
 

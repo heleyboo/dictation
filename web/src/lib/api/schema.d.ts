@@ -4,6 +4,147 @@
  */
 
 export interface paths {
+    "/api/v1/admin/lessons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Lessons */
+        get: operations["list_lessons_api_v1_admin_lessons_get"];
+        put?: never;
+        /**
+         * Create Lesson
+         * @description Validate, store the audio, create the lesson in `processing`, enqueue ingestion (AC-M2-01, 02.1).
+         */
+        post: operations["create_lesson_api_v1_admin_lessons_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lessons/{lesson_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lesson */
+        get: operations["get_lesson_api_v1_admin_lessons__lesson_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Lesson */
+        patch: operations["update_lesson_api_v1_admin_lessons__lesson_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/lessons/{lesson_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Lesson */
+        post: operations["publish_lesson_api_v1_admin_lessons__lesson_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lessons/{lesson_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry Lesson */
+        post: operations["retry_lesson_api_v1_admin_lessons__lesson_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/lessons/{lesson_id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unpublish Lesson */
+        post: operations["unpublish_lesson_api_v1_admin_lessons__lesson_id__unpublish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/segments/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Merge Segments */
+        post: operations["merge_segments_api_v1_admin_segments_merge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/segments/{segment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Segment */
+        patch: operations["update_segment_api_v1_admin_segments__segment_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/admin/segments/{segment_id}/split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Split Segment */
+        post: operations["split_segment_api_v1_admin_segments__segment_id__split_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/config": {
         parameters: {
             query?: never;
@@ -168,6 +309,34 @@ export interface components {
             /** Magic Link Enabled */
             magic_link_enabled: boolean;
         };
+        /** Body_create_lesson_api_v1_admin_lessons_post */
+        Body_create_lesson_api_v1_admin_lessons_post: {
+            /** Audio */
+            audio: string;
+            /**
+             * Level
+             * @enum {string}
+             */
+            level: "beginner" | "intermediate" | "advanced";
+            /** License */
+            license: string;
+            /** Source Name */
+            source_name: string;
+            /**
+             * Source Url
+             * @default
+             */
+            source_url: string | "";
+            /** Title */
+            title: string;
+            /**
+             * Topic
+             * @enum {string}
+             */
+            topic: "talk" | "news" | "interview" | "conversation";
+            /** Transcript */
+            transcript: string;
+        };
         /** DeleteAccount */
         DeleteAccount: {
             /** Confirm Email */
@@ -184,6 +353,93 @@ export interface components {
             db: string;
             /** Status */
             status: string;
+        };
+        /** LessonDetail */
+        LessonDetail: {
+            /** Attention Count */
+            attention_count: number;
+            /** Audio Url */
+            audio_url: string;
+            /** Duration Ms */
+            duration_ms: number;
+            /** Error Message */
+            error_message: string | null;
+            /** Id */
+            id: number;
+            /** Level */
+            level: string;
+            /** License */
+            license: string;
+            /** Published At */
+            published_at: string | null;
+            /** Segment Count */
+            segment_count: number;
+            /** Segments */
+            segments: components["schemas"]["SegmentOut"][];
+            /** Slug */
+            slug: string;
+            /** Source Name */
+            source_name: string;
+            /** Source Url */
+            source_url: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Topic */
+            topic: string;
+            /** Transcript */
+            transcript: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LessonSummary */
+        LessonSummary: {
+            /** Attention Count */
+            attention_count: number;
+            /** Duration Ms */
+            duration_ms: number;
+            /** Error Message */
+            error_message: string | null;
+            /** Id */
+            id: number;
+            /** Level */
+            level: string;
+            /** Published At */
+            published_at: string | null;
+            /** Segment Count */
+            segment_count: number;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /** Title */
+            title: string;
+            /** Topic */
+            topic: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LessonUpdate */
+        LessonUpdate: {
+            /** Level */
+            level?: ("beginner" | "intermediate" | "advanced") | null;
+            /** License */
+            license?: string | null;
+            /** Source Name */
+            source_name?: string | null;
+            /** Source Url */
+            source_url?: string | "" | null;
+            /** Title */
+            title?: string | null;
+            /** Topic */
+            topic?: ("talk" | "news" | "interview" | "conversation") | null;
         };
         /** MagicLinkAccepted */
         MagicLinkAccepted: {
@@ -247,6 +503,55 @@ export interface components {
             /** Timezone */
             timezone?: string | null;
         };
+        /** MergeRequest */
+        MergeRequest: {
+            /** First Id */
+            first_id: number;
+            /** Second Id */
+            second_id: number;
+        };
+        /** SegmentOut */
+        SegmentOut: {
+            /** Attention Reason */
+            attention_reason: string;
+            /** End Ms */
+            end_ms: number;
+            /** Id */
+            id: number;
+            /** Idx */
+            idx: number;
+            /** Needs Attention */
+            needs_attention: boolean;
+            /** Start Ms */
+            start_ms: number;
+            /** Text */
+            text: string;
+            /** Translation Vi */
+            translation_vi: string;
+            /**
+             * Word Count Aligned
+             * @description Word timings still match the text (split can derive the time)
+             */
+            word_count_aligned: boolean;
+        };
+        /** SegmentUpdate */
+        SegmentUpdate: {
+            /** End Ms */
+            end_ms?: number | null;
+            /** Start Ms */
+            start_ms?: number | null;
+            /** Text */
+            text?: string | null;
+            /** Translation Vi */
+            translation_vi?: string | null;
+        };
+        /** SplitRequest */
+        SplitRequest: {
+            /** Split Ms */
+            split_ms?: number | null;
+            /** Word Index */
+            word_index: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -269,6 +574,370 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_lessons_api_v1_admin_lessons_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_lesson_api_v1_admin_lessons_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_lesson_api_v1_admin_lessons_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lesson_api_v1_admin_lessons__lesson_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                lesson_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lesson_api_v1_admin_lessons__lesson_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                lesson_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    publish_lesson_api_v1_admin_lessons__lesson_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                lesson_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_lesson_api_v1_admin_lessons__lesson_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                lesson_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unpublish_lesson_api_v1_admin_lessons__lesson_id__unpublish_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                lesson_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    merge_segments_api_v1_admin_segments_merge_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MergeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_segment_api_v1_admin_segments__segment_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                segment_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SegmentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    split_segment_api_v1_admin_segments__segment_id__split_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-csrf-token"?: string | null;
+            };
+            path: {
+                segment_id: number;
+            };
+            cookie?: {
+                sid?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SplitRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     auth_config_api_v1_auth_config_get: {
         parameters: {
             query?: never;

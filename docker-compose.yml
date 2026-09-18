@@ -5,7 +5,12 @@ name: dictation
 x-app-env: &app-env
   DATABASE_URL: postgresql+asyncpg://dictation:${POSTGRES_PASSWORD:-dictation}@postgres:5432/dictation
   APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
-  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  # Local S3 (minio). Production points these at Cloudflare R2 via .env.
+  S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://minio:9000}
+  S3_BUCKET: ${S3_BUCKET:-dictation-audio}
+  S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-dictation}
+  S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-dictation-dev-secret}
+  S3_PUBLIC_BASE_URL: ${S3_PUBLIC_BASE_URL:-http://localhost:9010/dictation-audio}
 
 services:
   postgres:
@@ -25,12 +30,43 @@ services:
       timeout: 3s
       retries: 10
 
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-dictation}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-dictation-dev-secret}
+    ports:
+      - "127.0.0.1:${MINIO_HOST_PORT:-9010}:9000" # browser fetches audio from here
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: create the audio bucket and allow anonymous reads (audio URLs are public, keys are UUIDs).
+  minio-init:
+    image: minio/minio:latest # bundles the mc client
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: >
+      sh -c "mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}
+      && mc mb --ignore-existing local/$${BUCKET}
+      && mc anonymous set download local/$${BUCKET}"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-dictation}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-dictation-dev-secret}
+      BUCKET: ${S3_BUCKET:-dictation-audio}
+
   api:
     build: { context: ./api, target: api }
     environment: *app-env
     env_file: [{ path: .env, required: false }]
     depends_on:
       postgres: { condition: service_healthy }
+      minio-init: { condition: service_completed_successfully }
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/healthz')"]
       interval: 10s
@@ -53,3 +89,4 @@ services:
 
 volumes:
   pgdata:
+  miniodata:

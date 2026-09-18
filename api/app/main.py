@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
-from app.routers import auth, me
+from app.routers import admin_lessons, auth, me
 
 
 class Health(BaseModel):
@@ -36,6 +36,7 @@ async def healthz(response: Response, session: Annotated[AsyncSession, Depends(g
 
 api.include_router(auth.router)
 api.include_router(me.router)
+api.include_router(admin_lessons.router)
 
 
 def create_app() -> FastAPI:

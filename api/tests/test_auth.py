@@ -83,9 +83,9 @@ async def test_google_failures_redirect_to_login_without_creating_user(harness: 
 
 
 async def test_google_start_404_when_not_configured(sessions) -> None:  # type: ignore[no-untyped-def]
-    from tests.support import build_harness, test_settings
+    from tests.support import build_harness, make_settings
 
-    h = build_harness(sessions, test_settings(google_client_id=""))
+    h = build_harness(sessions, make_settings(google_client_id=""))
     async with h.client:
         assert (await h.client.get("/api/v1/auth/google/start")).status_code == 404
         assert (await h.client.get("/api/v1/auth/config")).json() == {
@@ -143,9 +143,9 @@ async def test_magic_link_rate_limited_per_email(harness: Harness) -> None:
 
 
 async def test_magic_link_disabled_by_flag(sessions) -> None:  # type: ignore[no-untyped-def]
-    from tests.support import build_harness, test_settings
+    from tests.support import build_harness, make_settings
 
-    h = build_harness(sessions, test_settings(magic_link_enabled=False))
+    h = build_harness(sessions, make_settings(magic_link_enabled=False))
     async with h.client:
         assert (
             await h.client.post("/api/v1/auth/magic-link", json={"email": "a@example.com"})
@@ -201,3 +201,14 @@ async def test_logout_revokes_session(harness: Harness) -> None:
     ).status_code == 204
     assert await _count(harness, Session) == 0
     assert (await harness.client.get("/api/v1/me")).status_code == 401
+
+
+def test_https_deployment_refuses_default_secret() -> None:
+    from pydantic import ValidationError
+
+    from app.config import Settings
+
+    with pytest.raises(ValidationError, match="SESSION_SECRET"):
+        Settings(app_base_url="https://dictation.example")
+    assert Settings(app_base_url="https://dictation.example", session_secret="x" * 40).cookie_secure
+    assert not Settings(app_base_url="http://localhost:8080").cookie_secure
