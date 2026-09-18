@@ -17,6 +17,8 @@ dependencies = [
     "mutagen>=1.48.1",
     "filetype>=1.2.0",
     "python-multipart>=0.0.32",
+    "anthropic>=1.7.0",
+    "pysbd>=0.3.4",
 ]
 
 [dependency-groups]
@@ -60,7 +62,9 @@ exclude = ["alembic/versions/"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+# pysbd ships regexes with invalid escapes (upstream issue); not our code.
+filterwarnings = ["ignore::SyntaxWarning:pysbd.*"]
 
 [[tool.mypy.overrides]]
-module = ["filetype"]
+module = ["filetype", "pysbd", "stable_whisper"]
 ignore_missing_imports = true

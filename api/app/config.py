@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     # Browser-facing base URL for audio objects (bucket must allow public reads + HTTP Range).
     s3_public_base_url: str = "http://localhost:9010/dictation-audio"
 
+    # LLM (translation at ingest, word lookup later). The SDK reads ANTHROPIC_API_KEY itself.
+    llm_model: str = "claude-haiku-4-5"
+    # Forced alignment model (stable-ts / Whisper); worker only.
+    align_model: str = "base.en"
+
     # Upload limits (AC-M2-01.2, AC-M2-01.3).
     max_audio_bytes: int = 30 * 1024 * 1024
     max_audio_seconds: int = 15 * 60
