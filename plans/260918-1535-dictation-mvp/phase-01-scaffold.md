@@ -1,9 +1,9 @@
 ---
 phase: 1
-title: "Scaffold"
-status: pending
+title: Scaffold
+status: completed
 priority: P1
-effort: "2-3d"
+effort: 2-3d
 dependencies: []
 ---
 
@@ -42,11 +42,23 @@ Dựng monorepo chạy được end-to-end rỗng: web gọi api `/healthz`, api
 9. README: yêu cầu hệ thống, lệnh dev, lệnh test.
 
 ## Success Criteria
-- [ ] `docker compose up` → mở web thấy "API OK" từ `/healthz`.
-- [ ] Test job queue: 2 worker song song, 20 job, mỗi job chạy đúng 1 lần.
-- [ ] CI xanh trên PR; lệch OpenAPI ↔ TS client làm CI đỏ.
-- [ ] Không secret trong repo; `.env.example` đầy đủ.
+- [x] `docker compose up` → mở web thấy "API OK" từ `/healthz`.
+- [x] Test job queue: 2 worker song song, 20 job, mỗi job chạy đúng 1 lần.
+- [x] CI xanh trên PR (chạy local tương đương; chờ lần chạy GitHub đầu tiên); lệch OpenAPI ↔ TS client làm CI đỏ.
+- [x] Không secret trong repo; `.env.example` đầy đủ.
 
 ## Risk Assessment
 - Image worker nặng (torch ~ GB) → build riêng target, dùng torch CPU wheel; cache layer.
 - Async SQLAlchemy + Alembic cấu hình dễ sai → migration chạy bằng sync URL riêng.
+
+## Implementation Notes (2026-09-18)
+- Kết quả: api 11 test (Postgres thật), web 18 test; ruff/mypy strict/eslint/prettier/tsc sạch; `docker compose up` → web 200, `/api/v1/healthz` ok, worker xử lý job smoke, torch `2.14.0+cpu`.
+- Lệch so với plan (có chủ đích):
+  - Alembic dùng template async (asyncpg) thay vì sync URL riêng — một driver, migration được test (upgrade + downgrade) trong pytest.
+  - minio chưa thêm vào compose → thêm ở phase 2 cùng `storage.py` (YAGNI).
+  - Tailwind v4: mapping token trong `web/src/styles/tailwind.css` (`@theme inline`) thay vì `tailwind.config.ts`; class hover `accent` của shadcn đổi sang `surface-2` vì `accent` là màu thương hiệu.
+  - TypeScript ghim `~6.0` (typescript-eslint chưa hỗ trợ 7); `openapi-typescript` override peer TS.
+  - Cổng host mặc định: Postgres `127.0.0.1:5434`, web `8080` (máy dev có dự án khác chiếm 5432/5433/80).
+  - `.gitignore`: bỏ ignore `plans/` (trước đó) và `package-lock.json`; ignore `node_modules/`, `.venv/`, cache Python ở mọi cấp.
+- Sửa code handoff (kéo từ phase 3 vì cần CI xanh): từ đang gõ khớp trọn → `correct`; rAF dùng `tickRef` (hết closure cũ); `durationMs` từ `loadedmetadata`.
+- Sau review: torch CPU thật sự (khai báo trực tiếp trong group `alignment`); job bị bỏ rơi hết lượt → `failed`; cập nhật done/failed có fencing `locked_at`; hợp đồng handler (không commit, idempotent) ghi trong `registry.py`.

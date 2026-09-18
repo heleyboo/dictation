@@ -90,7 +90,9 @@ export function SegmentInput({
 
         {revealed && (
           <div className="flex items-start gap-2.5 rounded-[10px] border border-warn bg-warn-soft px-3.5 py-3">
-            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-warn">Đã hiện đáp án</span>
+            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-wider text-warn">
+              Đã hiện đáp án
+            </span>
             <span className="font-serif text-[19px] leading-snug text-ink">{expectedText}</span>
           </div>
         )}

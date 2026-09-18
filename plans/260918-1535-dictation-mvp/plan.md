@@ -1,14 +1,23 @@
 ---
-title: "Dictation webapp MVP"
-description: "Webapp luyện nghe chép chính tả EN cho người Việt: player thông minh, diff real-time, thư viện theo level, vocab + FSRS, retention"
+title: Dictation webapp MVP
+description: >-
+  Webapp luyện nghe chép chính tả EN cho người Việt: player thông minh, diff
+  real-time, thư viện theo level, vocab + FSRS, retention
 status: pending
 priority: P2
-branch: "main"
-tags: [mvp, react, vite, fastapi, postgres, stable-ts, fsrs]
+branch: main
+tags:
+  - mvp
+  - react
+  - vite
+  - fastapi
+  - postgres
+  - stable-ts
+  - fsrs
 blockedBy: []
 blocks: []
-created: "2026-09-18T09:54:25.893Z"
-createdBy: "ck:plan"
+created: '2026-09-18T09:54:25.893Z'
+createdBy: 'ck:plan'
 source: skill
 ---
 
@@ -31,7 +40,7 @@ Caddyfile · .env.example · .github/workflows/ci.yml
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 1 | [Scaffold](./phase-01-scaffold.md) | Pending |
+| 1 | [Scaffold](./phase-01-scaffold.md) | Completed |
 | 2 | [Auth and content ingestion](./phase-02-auth-and-content-ingestion.md) | Pending |
 | 3 | [Core learning loop](./phase-03-core-learning-loop.md) | Pending |
 | 4 | [Vocabulary builder](./phase-04-vocabulary-builder.md) | Pending |

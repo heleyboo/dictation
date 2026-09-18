@@ -51,4 +51,5 @@ dependencies: [1]
 ## Risk Assessment
 - stable-ts align lệch với audio có nhạc nền/intro → cờ `needs_attention` + admin chỉnh; nếu tỉ lệ lỗi cao, cân nhắc trim intro trước.
 - RAM worker (model Whisper small ~2 GB) → worker concurrency = 1.
+- Alignment có thể chạy lâu hơn `WORKER_LOCK_TIMEOUT` (900 s) → job bị worker khác reclaim và chạy song song (kết quả vẫn được bảo vệ bằng fencing `locked_at`, nhưng tốn CPU gấp đôi). Trước khi thêm handler alignment: đo thời gian bài 15 phút, đặt timeout > thời gian tối đa hoặc thêm heartbeat cập nhật `locked_at`. <!-- Updated: phase 1 review -->
 - Fake LLM trong test chỉ ở ranh giới `llm_client` (dependency override), không mock logic nghiệp vụ.

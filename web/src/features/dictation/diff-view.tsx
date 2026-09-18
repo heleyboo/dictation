@@ -24,7 +24,10 @@ interface DiffViewProps {
 export function DiffView({ tokens, percent, className }: DiffViewProps) {
   return (
     <div
-      className={clsx("flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 font-serif text-[1.3125rem] leading-relaxed", className)}
+      className={clsx(
+        "flex min-h-9 flex-wrap items-center gap-x-2 gap-y-1 font-serif text-[1.3125rem] leading-relaxed",
+        className,
+      )}
       aria-live="polite"
       aria-atomic="true"
     >
