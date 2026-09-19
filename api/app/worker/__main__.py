@@ -6,6 +6,7 @@ import signal
 
 from app.config import get_settings
 from app.db import get_engine, session_factory
+from app.worker import handlers  # noqa: F401 — registers job handlers
 from app.worker.runner import run_forever
 
 

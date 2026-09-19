@@ -1,6 +1,6 @@
 # SRS — Dictation Web App (MVP)
 
-- Phiên bản: 1.2 · Ngày: 2026-09-18 · Trạng thái: Approved (brainstorm + plan validation + UI handoff)
+- Phiên bản: 1.3 · Ngày: 2026-09-19 (dịch: Sonnet 5) · Trạng thái: Approved (brainstorm + plan validation + UI handoff)
 - UI handoff: `docs/ui/` (component map, interaction notes) + code khởi đầu trong `web/src/`; khi lệch, SRS là nguồn sự thật.
 - Nguồn quyết định: `plans/reports/brainstorm-260918-1535-dictation-mvp-srs-report.md`
 - Quy ước ID: `FR-<module>-<nn>` (yêu cầu), `AC-<module>-<nn>.<k>` (tiêu chí chấp nhận), `NFR-<nn>`. AC viết dạng Given/When/Then; mọi AC phải kiểm chứng được bằng test tự động hoặc bước manual ghi rõ.
@@ -41,7 +41,7 @@ Payment/gói trả phí · app mobile native · nhúng TED/YouTube hoặc nội 
 | Worker | Cùng Python package với API; job queue bằng bảng Postgres (`SELECT … FOR UPDATE SKIP LOCKED`), không Redis |
 | DB | PostgreSQL 16 |
 | Alignment | stable-ts `model.align(audio, text)` (forced alignment transcript thuần → word timing), chạy CPU |
-| LLM | Anthropic `claude-haiku-4-5` (tra từ + dịch câu), gọi qua 1 module `llm_client` duy nhất |
+| LLM | Anthropic qua 1 module `llm_client` duy nhất: `claude-sonnet-5` dịch câu lúc nhập bài (`TRANSLATE_MODEL`), `claude-haiku-4-5` tra từ (`LLM_MODEL`). *(v1.3: dịch đổi Haiku → Sonnet 5 sau khi so trên bài VOA thật — Haiku dịch sai thành ngữ/tên loài; ≈ $0.03/bài.)* |
 | SRS algorithm | Thư viện Python `fsrs` (open-spaced-repetition), tính lịch ở server |
 | Storage | Cloudflare R2 (S3-compatible) cho audio; phục vụ qua HTTPS có hỗ trợ HTTP Range |
 | Email | Resend (hoặc SMTP) qua 1 module `mailer` |
@@ -91,10 +91,10 @@ Vòng đời bài: `draft → processing → review → published` (+ `failed`, 
 
 **FR-M2-02 Pipeline tự động (worker).**
 - AC-M2-02.1 Given bài vừa submit, Then trạng thái `processing` và 1 job được enqueue; UI admin hiển thị trạng thái, tự refresh (poll 5 s).
-- AC-M2-02.2 Worker tách transcript thành câu (sentence splitter, giữ nguyên dấu câu gốc), chạy stable-ts forced alignment trên toàn transcript, tạo `segments` với `start_ms`/`end_ms`: `start = max(0, first_word_start − 150ms)`, `end = min(last_word_end + 200ms, next_segment_start)`.
+- AC-M2-02.2 Worker tách transcript thành câu (sentence splitter, giữ nguyên dấu câu gốc), chạy stable-ts forced alignment trên toàn transcript, tạo `segments` với `start_ms`/`end_ms`: `start = max(0, first_word_start − 150ms)`, `end = min(last_word_end + 500ms, next_segment_start, duration)`. Chỉ dùng từ align được làm mốc (token không align được không kéo lệch ranh giới). *(v1.3: +200ms → +500ms — đo trên bài VOA thật, aligner kết thúc từ cuối sớm; +200ms cắt mất "monarchs", +500ms không.)*
 - AC-M2-02.3 Sau alignment, worker gọi LLM dịch từng câu sang tiếng Việt (có ngữ cảnh cả bài, batch), lưu `translation_vi`.
 - AC-M2-02.4 Thành công → `review`. Lỗi bất kỳ bước nào → `failed` + lưu `error_message`; admin bấm "Chạy lại" được. Job retry tự động tối đa 2 lần với backoff.
-- AC-M2-02.5 Segment có > 25 từ hoặc < 1 s hoặc từ không align được (confidence thấp) được đánh cờ `needs_attention` để admin xem.
+- AC-M2-02.5 Segment có > 25 từ, < 1 s, có từ không align được, hoặc ≥ 3 từ (hoặc ≥ 20% số từ) align với độ tin cậy thấp được đánh cờ `needs_attention` kèm lý do để admin xem. *(v1.3: 1 từ kém tin cậy là bình thường — gắn cờ theo từng từ làm 20/39 câu bị cờ, mất tác dụng.)*
 - AC-M2-02.6 Bài 5 phút audio xử lý xong (alignment + dịch) ≤ 10 phút trên VPS 4 vCPU.
 
 **FR-M2-03 Review & chỉnh sửa.**

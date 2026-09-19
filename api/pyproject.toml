@@ -10,10 +10,25 @@ dependencies = [
     "asyncpg",
     "alembic",
     "pydantic-settings",
+    "httpx>=0.28.1",
+    "itsdangerous>=2.2.0",
+    "pydantic[email]>=2.13.5",
+    "boto3>=1.43.97",
+    "mutagen>=1.48.1",
+    "filetype>=1.2.0",
+    "python-multipart>=0.0.32",
+    "anthropic>=1.7.0",
+    "pysbd>=0.3.4",
 ]
 
 [dependency-groups]
-dev = ["pytest", "pytest-asyncio", "httpx", "ruff", "mypy"]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+    "boto3-stubs[s3]>=1.43.97",
+]
 # Forced alignment (stable-ts + torch CPU); installed only in the worker image.
 # torch is listed directly so the CPU-only index below applies (uv sources only affect direct deps).
 alignment = ["stable-ts", "torch", "torchaudio"]
@@ -47,3 +62,9 @@ exclude = ["alembic/versions/"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+# pysbd ships regexes with invalid escapes (upstream issue); not our code.
+filterwarnings = ["ignore::SyntaxWarning:pysbd.*"]
+
+[[tool.mypy.overrides]]
+module = ["filetype", "pysbd", "stable_whisper"]
+ignore_missing_imports = true

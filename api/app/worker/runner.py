@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.worker import queue
-from app.worker.registry import HANDLERS, Handler
+from app.worker.registry import HANDLERS, JobSpec
 
 log = logging.getLogger("worker")
 
@@ -16,7 +16,7 @@ log = logging.getLogger("worker")
 async def run_one(
     sessions: async_sessionmaker[AsyncSession],
     lock_timeout: int,
-    handlers: Mapping[str, Handler] | None = None,
+    handlers: Mapping[str, JobSpec] | None = None,
 ) -> bool:
     """Process at most one job. Returns False when nothing was claimable."""
     handlers = HANDLERS if handlers is None else handlers
@@ -24,18 +24,21 @@ async def run_one(
         job = await queue.claim_next(session, lock_timeout)
         if job is None:
             return False
-        handler = handlers.get(job.type)
-        if handler is None:
+        spec = handlers.get(job.type)
+        if spec is None:
             log.error("no handler for job type %s (job %s)", job.type, job.id)
             await queue.mark_failed(session, job, f"no handler registered for {job.type!r}")
             return True
         log.info("running job %s type=%s attempt=%s", job.id, job.type, job.attempts)
         try:
-            await handler(session, job.payload)
-        except Exception:  # noqa: BLE001 — any handler failure is recorded on the job, never crashes the loop
+            await spec.handler(session, job.payload)
+        except Exception as exc:  # noqa: BLE001 — any handler failure is recorded on the job, never crashes the loop
             await session.rollback()
             log.exception("job %s failed", job.id)
-            await queue.mark_failed(session, job, traceback.format_exc())
+            owned = await queue.mark_failed(session, job, traceback.format_exc())
+            if owned and job.attempts >= job.max_attempts and spec.on_give_up is not None:
+                await spec.on_give_up(session, job.payload, f"{type(exc).__name__}: {exc}")
+                await session.commit()
         else:
             if not await queue.mark_done(session, job):
                 log.warning("job %s finished after its claim was lost (reclaimed elsewhere)", job.id)

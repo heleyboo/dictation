@@ -1,10 +1,11 @@
 ---
 phase: 2
-title: "Auth and content ingestion"
-status: pending
+title: Auth and content ingestion
+status: completed
 priority: P1
-effort: "5-7d"
-dependencies: [1]
+effort: 5-7d
+dependencies:
+  - 1
 ---
 
 # Phase 2: Auth and content ingestion
@@ -43,13 +44,26 @@ dependencies: [1]
 10. Chạy thật 1 bài VOA (≈ 3–5 phút) và ghi thời gian xử lý (AC-M2-02.6).
 
 ## Success Criteria
-- [ ] Mọi AC M1, M2 có test (API test dùng fake Google + fake LLM qua dependency override; alignment test dùng 1 clip ngắn fixture được đánh dấu `slow`).
-- [ ] Learner gọi `/api/v1/admin/*` → 403; request ghi thiếu CSRF → 403.
-- [ ] 1 bài VOA thật: published, nghe thử 10 segment ngẫu nhiên không cắt mất đầu/cuối từ.
-- [ ] Bài 5 phút xử lý ≤ 10 phút trên máy 4 vCPU.
+- [x] Mọi AC M1, M2 có test (API test dùng fake Google + fake LLM qua dependency override; alignment test dùng 1 clip ngắn fixture được đánh dấu `slow`).
+- [x] Learner gọi `/api/v1/admin/*` → 403; request ghi thiếu CSRF → 403.
+- [x] 1 bài VOA thật: published, nghe thử 10 segment ngẫu nhiên không cắt mất đầu/cuối từ.
+- [x] Bài 5 phút xử lý ≤ 10 phút trên máy 4 vCPU.
 
 ## Risk Assessment
 - stable-ts align lệch với audio có nhạc nền/intro → cờ `needs_attention` + admin chỉnh; nếu tỉ lệ lỗi cao, cân nhắc trim intro trước.
 - RAM worker (model Whisper small ~2 GB) → worker concurrency = 1.
 - Alignment có thể chạy lâu hơn `WORKER_LOCK_TIMEOUT` (900 s) → job bị worker khác reclaim và chạy song song (kết quả vẫn được bảo vệ bằng fencing `locked_at`, nhưng tốn CPU gấp đôi). Trước khi thêm handler alignment: đo thời gian bài 15 phút, đặt timeout > thời gian tối đa hoặc thêm heartbeat cập nhật `locked_at`. <!-- Updated: phase 1 review -->
 - Fake LLM trong test chỉ ở ranh giới `llm_client` (dependency override), không mock logic nghiệp vụ.
+
+## Implementation Notes (2026-09-19)
+- Slices: A auth (3b7e0a6) · B admin API + storage (1ec6ce2) · C pipeline (cd518d5) · D web (e252503) · E real-run fixes (aadb9b3).
+- Tests: api 82 (Postgres thật), web 20; ruff/mypy strict/eslint/tsc sạch.
+- Chạy thật (VOA "Monarch Butterfly Count Nears 30-Year Low", 5:54, 589 từ, 39 câu):
+  - Pipeline 41–47 s (align stable-ts `base.en` CPU ~7 s; dịch Haiku 1 lần ~24 s, 2.4k in / 2.5k out token). AC-M2-02.6 (≤ 10 phút) đạt.
+  - Kiểm tra ranh giới tự động (cắt clip theo start/end → Whisper nhận dạng lại → so từ đầu/cuối): 35/39 khớp; 3 lệch do chính tả ASR (pesticide, 5th, earth justice), 1 câu (29) do vùng align lỗi — đã được cờ, admin sửa trên UI, publish.
+  - Browser (agent-browser): guard → /login, magic link → /admin, danh sách, màn review, báo lỗi chồng lấn, lưu timing, phát câu tự dừng lệch 12 ms, publish → gộp/tách bị khoá.
+- Lệch so với plan / SRS (v1.3): đệm cuối câu +500 ms (đo: +200 ms cắt từ cuối); ranh giới chỉ theo từ align được; cờ "kém tin cậy" khi ≥ 3 từ hoặc ≥ 20%; lưu câu xoá cờ; dấu nháy đóng dính câu trước; cookie Secure suy ra từ `APP_BASE_URL` https (bỏ `COOKIE_SECURE`); minio init dùng image `minio/minio` (Docker Hub không còn `minio/mc`); S3 endpoint nội bộ cố định trong compose.
+- Lock timeout: bài 5–6 phút align ~7 s nên 900 s dư nhiều; chưa cần heartbeat (đo lại với bài 15 phút ở phase 6).
+- Chất lượng dịch: Haiku sai thành ngữ/tên ("spend the winter" → "dành dụm"/"dành để đông cứu", "milkweed" → "khu khố"/"cỏ loa kèn"), dao động giữa các lần chạy; prompt mới (quy tắc tên riêng, thành ngữ, thuật ngữ) cải thiện tên riêng nhưng không sửa được thành ngữ. So cùng prompt: Sonnet 5 dịch đúng ("trú đông", "cây bông tai (milkweed)", "khu đất"), ≈ $0.034/bài vs $0.015. User chọn `TRANSLATE_MODEL=claude-sonnet-5`; tra từ giữ Haiku.
+- Code review (2026-09-19) — đã sửa: giới hạn body ở Caddy (upload 31 MB, còn lại 1 MB; trước đó body được spool ra đĩa trước khi kiểm tra quyền); cookie session cấp lại khi gia hạn (đúng "30 ngày không hoạt động"); magic link 2 bước (`/login/confirm` xem trước → POST tiêu thụ) chống trình quét link email + hiện email chống login-CSRF; `safeReturnTo` phía web so origin (chặn `/\evil.com`); `llm_usage` ghi bằng session riêng (không mất khi rollback); CSRF so sánh hằng thời gian; lỗi mạng OAuth → `/login?error=google`; tạo user idempotent khi đăng nhập đồng thời + cắt tên 120 ký tự; xoá audio mồ côi khi commit lỗi.
+- Hoãn sang phase 6 (ghi trong phase-06): rate limit magic link theo IP (magic link đang tắt khi launch); transaction DB mở trong lúc align (đo ~7 s; đo lại với bài 15 phút).

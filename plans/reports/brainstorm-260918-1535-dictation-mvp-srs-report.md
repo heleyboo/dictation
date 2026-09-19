@@ -20,7 +20,7 @@ Greenfield: chỉ có ClaudeKit scaffolding + `.gitignore` mẫu Next.js; chưa 
 | Tài khoản | Bắt buộc login để học (Google + magic link) | localStorage (không đo retention, mất dữ liệu) |
 | Stack | React/Vite + FastAPI + Postgres + worker Python | NestJS+Py worker (2 ngôn ngữ backend, 3 service); STT API (chi phí/phút) |
 | Tra từ | Claude Haiku 4.5 + cache (word, segment) | Từ điển mở (chất lượng không đều, không ngữ cảnh) |
-| Dịch câu | LLM dịch lúc ingest, admin sửa | Nhập tay (nghẽn ra bài) |
+| Dịch câu | LLM dịch lúc ingest, admin sửa — **cập nhật 2026-09-19: Sonnet 5** (so trên bài VOA thật, Haiku sai thành ngữ/tên loài) | Nhập tay (nghẽn ra bài) |
 | Chấm điểm | Theo câu, diff từ, case-insensitive, strict punctuation toggle mặc định TẮT | Bắt buộc dấu câu (nản người mới); cả bài 1 ô (lệch auto-pause) |
 | Retention | Streak, lịch sử/tiếp tục, badge due, email nhắc hằng ngày | Gamification/leaderboard (YAGNI) |
 | Deploy | Docker Compose 1 VPS, R2 audio, responsive web | Managed multi-cloud |
