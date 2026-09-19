@@ -48,12 +48,14 @@ export function LoginPage() {
           <a href={googleHref}>Đăng nhập với Google</a>
         </Button>
       )}
-      {config.data?.magic_link_enabled && <MagicLinkForm returnTo={returnTo} />}
+      {config.data?.magic_link_enabled && (
+        <MagicLinkForm returnTo={returnTo} showDivider={config.data.google_enabled} />
+      )}
     </main>
   );
 }
 
-function MagicLinkForm({ returnTo }: { returnTo: string }) {
+function MagicLinkForm({ returnTo, showDivider }: { returnTo: string; showDivider: boolean }) {
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -107,11 +109,13 @@ function MagicLinkForm({ returnTo }: { returnTo: string }) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <div className="flex items-center gap-3 text-xs text-ink-3">
-        <span className="h-px flex-1 bg-line" />
-        hoặc
-        <span className="h-px flex-1 bg-line" />
-      </div>
+      {showDivider && (
+        <div className="flex items-center gap-3 text-xs text-ink-3">
+          <span className="h-px flex-1 bg-line" />
+          hoặc
+          <span className="h-px flex-1 bg-line" />
+        </div>
+      )}
       <Label htmlFor="email">Email</Label>
       <Input
         id="email"

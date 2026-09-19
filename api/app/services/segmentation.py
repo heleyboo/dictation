@@ -10,10 +10,15 @@ from difflib import SequenceMatcher
 import pysbd
 
 LEAD_PAD_MS = 150
-TAIL_PAD_MS = 200
+# Aligners tend to end the last word early (measured on VOA audio: +200 ms clipped "monarchs", +500 ms did
+# not). Still capped by the next sentence's start, so segments never overlap.
+TAIL_PAD_MS = 500
 MAX_WORDS = 25
 MIN_DURATION_MS = 1000
 LOW_CONFIDENCE = 0.4
+# One shaky word is normal; flag a sentence only when weak timings are frequent enough to matter.
+WEAK_WORDS_TO_FLAG = 3
+WEAK_SHARE_TO_FLAG = 0.2
 
 
 @dataclass(frozen=True)
@@ -44,12 +49,37 @@ class SegmentDraft:
     attention_reason: str
 
 
+# Closing marks the splitter can leave at the start of the next sentence (e.g. `…monarchs.” The`).
+_LEADING_CLOSERS = re.compile(r"^([”’)\]]+)\s*")
+_STRAIGHT_QUOTE = re.compile(r'^"\s*')
+
+
+def _leading_closer(sentence: str, previous: str) -> re.Match[str] | None:
+    """A curly closing quote/bracket always closes; a straight `"` only when `previous` has one open."""
+    closer = _LEADING_CLOSERS.match(sentence)
+    if closer:
+        return closer
+    if previous.count('"') % 2 == 1:
+        return _STRAIGHT_QUOTE.match(sentence)
+    return None
+
+
 def split_sentences(transcript: str) -> list[str]:
     """Sentence split that keeps the original punctuation; whitespace (incl. newlines) collapsed."""
     text = re.sub(r"\s+", " ", transcript).strip()
     if not text:
         return []
-    return [s.strip() for s in pysbd.Segmenter(language="en", clean=False).segment(text) if s.strip()]
+    sentences: list[str] = []
+    for raw in pysbd.Segmenter(language="en", clean=False).segment(text):
+        sentence = raw.strip()
+        closer = _leading_closer(sentence, sentences[-1]) if sentences else None
+        if closer:
+            # A closing quote/bracket belongs to the sentence it ends.
+            sentences[-1] += closer.group(0).strip()
+            sentence = sentence[closer.end() :]
+        if sentence:
+            sentences.append(sentence)
+    return sentences
 
 
 def _key(text: str) -> str:
@@ -116,7 +146,7 @@ def _fill_missing(tokens: list[TimedToken], duration_ms: int) -> list[TimedToken
 
 
 def build_segments(sentences: list[str], aligned: list[AlignedWord], duration_ms: int) -> list[SegmentDraft]:
-    """Sentence spans with padding: start = first word − 150 ms, end = last word + 200 ms, never
+    """Sentence spans with padding: start = first word − 150 ms, end = last word + 500 ms, never
     overlapping the next sentence's start and never beyond the audio."""
     sentence_tokens = [s.split() for s in sentences]
     flat = [tok for toks in sentence_tokens for tok in toks]
@@ -129,9 +159,15 @@ def build_segments(sentences: list[str], aligned: list[AlignedWord], duration_ms
         per_sentence.append((raw[pos : pos + len(toks)], timed[pos : pos + len(toks)]))
         pos += len(toks)
 
+    # Bounds come from words the aligner actually placed; interpolated times (unplaced tokens such as a
+    # stray quote) would otherwise pull a sentence's start into its neighbour and clip its last word.
+    def anchors(raw_words: list[TimedToken], words: list[TimedToken]) -> list[TimedToken]:
+        placed = [w for w in raw_words if w.start_ms is not None]
+        return placed or words
+
     starts: list[int] = []
-    for _, words in per_sentence:
-        first = next((w.start_ms for w in words if w.start_ms is not None), 0)
+    for raw_words, words in per_sentence:
+        first = next((w.start_ms for w in anchors(raw_words, words) if w.start_ms is not None), 0)
         starts.append(max(0, first - LEAD_PAD_MS))
     # Keep starts monotonic even if alignment is off.
     for i in range(1, len(starts)):
@@ -139,7 +175,7 @@ def build_segments(sentences: list[str], aligned: list[AlignedWord], duration_ms
 
     drafts: list[SegmentDraft] = []
     for i, (sentence, (raw_words, words)) in enumerate(zip(sentences, per_sentence, strict=True)):
-        last = max((w.end_ms for w in words if w.end_ms is not None), default=starts[i])
+        last = max((w.end_ms for w in anchors(raw_words, words) if w.end_ms is not None), default=starts[i])
         limit = starts[i + 1] if i + 1 < len(starts) else duration_ms
         end = min(last + TAIL_PAD_MS, limit, duration_ms)
         end = max(end, starts[i] + 1)
@@ -153,7 +189,7 @@ def build_segments(sentences: list[str], aligned: list[AlignedWord], duration_ms
         weak = sum(1 for w in raw_words if w.start_ms is not None and w.probability < LOW_CONFIDENCE)
         if unplaced:
             reasons.append(f"{unplaced} từ không căn được thời gian")
-        elif weak:
+        elif weak >= WEAK_WORDS_TO_FLAG or (words and weak / len(words) >= WEAK_SHARE_TO_FLAG):
             reasons.append(f"{weak} từ căn thời gian kém tin cậy")
 
         drafts.append(

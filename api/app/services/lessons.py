@@ -94,6 +94,9 @@ def edit_segment(
         new_end = seg.end_ms if end_ms is None else end_ms
         validate_timing(lesson, seg, new_start, new_end)
         seg.start_ms, seg.end_ms = new_start, new_end
+    # An admin saving the segment has reviewed it; clear the pipeline's warning.
+    seg.needs_attention = False
+    seg.attention_reason = ""
 
 
 async def _shift(db: AsyncSession, lesson_id: int, after_idx: int, delta: int) -> None:

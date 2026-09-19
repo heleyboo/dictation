@@ -306,3 +306,19 @@ async def test_update_lesson_metadata(harness: Harness) -> None:
         f"/api/v1/admin/lessons/{lesson.id}", json={"license": ""}, headers=headers
     )
     assert bad.status_code == 422
+
+
+async def test_saving_a_flagged_segment_clears_its_warning(harness: Harness) -> None:
+    headers = await _admin(harness)
+    await _seed_review_lesson(harness)
+    async with harness.sessions() as db:
+        seg = (await db.execute(select(Segment).where(Segment.idx == 1))).scalar_one()
+        seg.needs_attention, seg.attention_reason = True, "5 từ căn thời gian kém tin cậy"
+        await db.commit()
+        seg_id = seg.id
+    res = await harness.client.patch(
+        f"/api/v1/admin/segments/{seg_id}", json={"end_ms": 5900}, headers=headers
+    )
+    body = res.json()
+    assert body["attention_count"] == 0
+    assert (body["segments"][1]["needs_attention"], body["segments"][1]["attention_reason"]) == (False, "")

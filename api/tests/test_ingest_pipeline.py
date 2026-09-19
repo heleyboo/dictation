@@ -101,8 +101,8 @@ async def test_pipeline_aligns_translates_and_moves_to_review(
     lesson = await _lesson(sessions, lesson_id)
     assert lesson.status == LessonStatus.REVIEW
     assert [(s.idx, s.text, s.start_ms, s.end_ms) for s in lesson.segments] == [
-        (0, "Scientists say the study matters.", 0, 2600),
-        (1, "It was published today.", 2850, 5100),
+        (0, "Scientists say the study matters.", 0, 2850),
+        (1, "It was published today.", 2850, 5400),
     ]
     assert lesson.segments[0].translation_vi == "VI[Scientists say the study matters.]"
     assert lesson.segments[1].words[2] == {

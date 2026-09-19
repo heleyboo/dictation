@@ -42,9 +42,9 @@ def test_segment_bounds_pad_and_never_overlap() -> None:
     sentences = ["One two.", "Three four."]
     aligned = [w("One", 1000, 1300), w("two.", 1400, 1900), w("Three", 2000, 2400), w("four.", 2500, 3000)]
     first, second = build_segments(sentences, aligned, duration_ms=10_000)
-    # start = first word − 150; end = last word + 200 but not past next start
+    # start = first word − 150; end = last word + 500 but not past next start
     assert (first.start_ms, first.end_ms) == (850, 1850)
-    assert (second.start_ms, second.end_ms) == (1850, 3200)
+    assert (second.start_ms, second.end_ms) == (1850, 3500)
     assert first.end_ms <= second.start_ms
 
 
@@ -73,3 +73,38 @@ def test_clean_segment_not_flagged() -> None:
         5000,
     )
     assert not seg.needs_attention and seg.attention_reason == ""
+
+
+def test_closing_quote_stays_with_its_sentence() -> None:
+    # Real VOA text: opens with a straight quote, closes with a curly one, so the splitter misplaces it.
+    text = (
+        "The year after that the survey recorded 335,479 monarchs. "
+        '"This is bad news," Pelton said. "But we have seen incredible recovery. '
+        "This doesn't mean we're not going to have western monarchs.\u201d "
+        "The U.S. Fish and Wildlife Service acted."
+    )
+    sentences = split_sentences(text)
+    assert sentences[0] == "The year after that the survey recorded 335,479 monarchs."
+    assert sentences[1].startswith('"This is bad news,"')
+    assert "This doesn't mean we're not going to have western monarchs.\u201d" in sentences
+    assert sentences[-1] == "The U.S. Fish and Wildlife Service acted."
+    assert not any(s[0] in "\u201d\u2019)]" for s in sentences)
+
+
+def test_single_weak_word_is_not_flagged_but_many_are() -> None:
+    words = [f"w{i}" for i in range(10)]
+    sentence = " ".join(words) + "."
+    one_weak = [w(t, i * 100, i * 100 + 90, p=0.1 if i == 3 else 0.9) for i, t in enumerate(words)]
+    [seg] = build_segments([sentence], one_weak, 5000)
+    assert not seg.needs_attention
+    three_weak = [w(t, i * 100, i * 100 + 90, p=0.1 if i in (1, 2, 3) else 0.9) for i, t in enumerate(words)]
+    [seg] = build_segments([sentence], three_weak, 5000)
+    assert seg.needs_attention and "3 từ" in seg.attention_reason
+
+
+def test_unplaced_leading_token_does_not_clip_previous_sentence() -> None:
+    # "--" has no alignment; its interpolated time must not move sentence 2's start before "Next".
+    aligned = [w("Last", 0, 400), w("words.", 500, 1200), w("Next", 2500, 2800), w("one.", 2900, 3300)]
+    first, second = build_segments(["Last words.", "-- Next one."], aligned, duration_ms=5000)
+    assert second.start_ms == 2350
+    assert first.end_ms == 1700  # last word end + 500, not cut at the interpolated time
