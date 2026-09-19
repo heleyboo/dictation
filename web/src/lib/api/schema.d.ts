@@ -239,6 +239,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/magic-link/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview Magic Link
+         * @description Read-only check used by the confirmation page. Link scanners that fetch the emailed URL (a web page)
+         *     never reach the consuming POST below, so they cannot burn the single-use link.
+         */
+        get: operations["preview_magic_link_api_v1_auth_magic_link_preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/magic-link/verify": {
         parameters: {
             query?: never;
@@ -246,10 +267,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Verify Magic Link */
-        get: operations["verify_magic_link_api_v1_auth_magic_link_verify_get"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Verify Magic Link */
+        post: operations["verify_magic_link_api_v1_auth_magic_link_verify_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -446,6 +467,11 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** MagicLinkPreview */
+        MagicLinkPreview: {
+            /** Email */
+            email: string;
+        };
         /** MagicLinkRequest */
         MagicLinkRequest: {
             /**
@@ -458,6 +484,11 @@ export interface components {
              * @default /
              */
             return_to: string;
+        };
+        /** MagicLinkToken */
+        MagicLinkToken: {
+            /** Token */
+            token: string;
         };
         /** Me */
         Me: {
@@ -544,6 +575,11 @@ export interface components {
             text?: string | null;
             /** Translation Vi */
             translation_vi?: string | null;
+        };
+        /** SignedIn */
+        SignedIn: {
+            /** Return To */
+            return_to: string;
         };
         /** SplitRequest */
         SplitRequest: {
@@ -1084,7 +1120,7 @@ export interface operations {
             };
         };
     };
-    verify_magic_link_api_v1_auth_magic_link_verify_get: {
+    preview_magic_link_api_v1_auth_magic_link_preview_get: {
         parameters: {
             query: {
                 token: string;
@@ -1096,11 +1132,46 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            303: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["MagicLinkPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_magic_link_api_v1_auth_magic_link_verify_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MagicLinkToken"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignedIn"];
+                };
             };
             /** @description Validation Error */
             422: {

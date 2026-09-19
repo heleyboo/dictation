@@ -30,6 +30,8 @@ dependencies: [5]
 2. Accessibility: axe-core trong e2e cho library, workspace, review; sửa vi phạm; kiểm tra tương phản.
 3. Performance: Lighthouse CI (mobile) cho library + workspace; kiểm tra bundle size; load test API không-LLM 50 req/s p95 ≤ 300 ms.
 4. Security pass: `/ck:security-scan` + rà checklist NFR-04/05 (CSP, CORS, CSRF, headers, upload); dependency audit (`pip-audit`, `npm audit`).
+   - Trước khi bật `MAGIC_LINK_ENABLED` ở production: rate limit theo IP (và IP+email) cho `POST /auth/magic-link` — hiện chỉ theo email nên một IP có thể gửi tới nhiều địa chỉ. <!-- Updated: phase 2 review -->
+   - Đo thời gian align bài 15 phút; nếu dài, tách tải S3 + align ra ngoài transaction DB của handler. <!-- Updated: phase 2 review -->
 5. Deploy VPS: DNS, compose prod (`EMAIL_REMINDERS_ENABLED=false`, `MAGIC_LINK_ENABLED=false` tới khi domain gửi mail có SPF/DKIM), secrets qua `.env` trên server (không commit), backup + thử restore 1 lần.
 6. Seed nội dung: ingest ≥ 30 bài VOA qua admin, review, publish.
 7. Viết `docs/system-architecture.md` + cập nhật README (deploy, backup/restore).

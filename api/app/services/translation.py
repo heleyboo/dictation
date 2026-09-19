@@ -1,7 +1,6 @@
 """Sentence-by-sentence English → Vietnamese translation at ingest (AC-M2-02.3)."""
 
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.llm_client import LlmError, StructuredLlm
 
@@ -34,9 +33,7 @@ def _prompt(title: str, sentences: list[str], batch: range) -> str:
     )
 
 
-async def translate_sentences(
-    db: AsyncSession, llm: StructuredLlm, title: str, sentences: list[str]
-) -> list[str]:
+async def translate_sentences(llm: StructuredLlm, title: str, sentences: list[str]) -> list[str]:
     """Returns one translation per sentence, in order. Each batch is retried once on a bad answer."""
     result: list[str | None] = [None] * len(sentences)
     for start in range(0, len(sentences), BATCH_SIZE):
@@ -44,7 +41,6 @@ async def translate_sentences(
         for attempt in (1, 2):
             try:
                 answer = await llm.parse(
-                    db,
                     purpose="translate",
                     system=SYSTEM,
                     prompt=_prompt(title, sentences, batch),

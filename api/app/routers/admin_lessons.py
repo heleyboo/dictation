@@ -236,10 +236,14 @@ async def create_lesson(
         transcript=transcript,
         created_by=auth.user.id,
     )
-    db.add(lesson)
-    await db.flush()
-    await svc.start_ingest(db, lesson)
-    await db.commit()
+    try:
+        db.add(lesson)
+        await db.flush()
+        await svc.start_ingest(db, lesson)
+        await db.commit()
+    except Exception:
+        await storage.delete(key)  # don't leave an orphaned audio object behind
+        raise
     return _detail(await _lesson_or_404(db, lesson.id), storage)
 
 

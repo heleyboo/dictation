@@ -27,7 +27,8 @@ async def create_session(db: AsyncSession, user: User, ttl: timedelta) -> str:
     return token
 
 
-async def resolve_session(db: AsyncSession, token: str, ttl: timedelta) -> tuple[Session, User] | None:
+async def resolve_session(db: AsyncSession, token: str, ttl: timedelta) -> tuple[Session, User, bool] | None:
+    """Returns (session, user, extended); `extended` means the cookie must be re-issued too."""
     row = (
         await db.execute(
             select(Session, User)
@@ -47,4 +48,5 @@ async def resolve_session(db: AsyncSession, token: str, ttl: timedelta) -> tuple
     if session.expires_at - ttl + _REFRESH_AFTER <= now:
         session.expires_at = now + ttl
         await db.commit()
-    return session, user
+        return session, user, True
+    return session, user, False

@@ -450,6 +450,19 @@
         "title": "MagicLinkAccepted",
         "type": "object"
       },
+      "MagicLinkPreview": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "MagicLinkPreview",
+        "type": "object"
+      },
       "MagicLinkRequest": {
         "properties": {
           "email": {
@@ -467,6 +480,19 @@
           "email"
         ],
         "title": "MagicLinkRequest",
+        "type": "object"
+      },
+      "MagicLinkToken": {
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "MagicLinkToken",
         "type": "object"
       },
       "Me": {
@@ -724,6 +750,19 @@
           }
         },
         "title": "SegmentUpdate",
+        "type": "object"
+      },
+      "SignedIn": {
+        "properties": {
+          "return_to": {
+            "title": "Return To",
+            "type": "string"
+          }
+        },
+        "required": [
+          "return_to"
+        ],
+        "title": "SignedIn",
         "type": "object"
       },
       "SplitRequest": {
@@ -1811,9 +1850,10 @@
         ]
       }
     },
-    "/api/v1/auth/magic-link/verify": {
+    "/api/v1/auth/magic-link/preview": {
       "get": {
-        "operationId": "verify_magic_link_api_v1_auth_magic_link_verify_get",
+        "description": "Read-only check used by the confirmation page. Link scanners that fetch the emailed URL (a web page)\nnever reach the consuming POST below, so they cannot burn the single-use link.",
+        "operationId": "preview_magic_link_api_v1_auth_magic_link_preview_get",
         "parameters": [
           {
             "in": "query",
@@ -1826,7 +1866,55 @@
           }
         ],
         "responses": {
-          "303": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagicLinkPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Magic Link",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/magic-link/verify": {
+      "post": {
+        "operationId": "verify_magic_link_api_v1_auth_magic_link_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MagicLinkToken"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedIn"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {

@@ -96,8 +96,13 @@ async def test_google_start_404_when_not_configured(sessions) -> None:  # type: 
 
 def _link_token(h: Harness) -> str:
     body = h.mailer.sent[-1].text
-    url = next(word for word in body.split() if "magic-link/verify" in word)
+    url = next(word for word in body.split() if "/login/confirm" in word)
+    assert url.startswith("http://test/login/confirm?token=")
     return parse_qs(urlsplit(url).query)["token"][0]
+
+
+async def _verify(h: Harness, token: str):  # type: ignore[no-untyped-def]
+    return await h.client.post("/api/v1/auth/magic-link/verify", json={"token": token})
 
 
 async def test_magic_link_signs_in_once(harness: Harness) -> None:
@@ -109,13 +114,21 @@ async def test_magic_link_signs_in_once(harness: Harness) -> None:
     assert harness.mailer.sent[-1].to == "new@example.com"
     token = _link_token(harness)
 
-    res = await harness.client.get("/api/v1/auth/magic-link/verify", params={"token": token})
-    assert res.status_code == 303 and res.headers["location"] == "/lessons/y"
+    # Previewing (what the confirmation page does) does not consume the link.
+    for _ in range(2):
+        preview = await harness.client.get("/api/v1/auth/magic-link/preview", params={"token": token})
+        assert preview.status_code == 200 and preview.json() == {"email": "new@example.com"}
+
+    res = await _verify(harness, token)
+    assert res.status_code == 200 and res.json() == {"return_to": "/lessons/y"}
+    assert SESSION_COOKIE in res.cookies
     assert (await harness.client.get("/api/v1/me")).json()["email"] == "new@example.com"
 
     harness.client.cookies.clear()
-    res = await harness.client.get("/api/v1/auth/magic-link/verify", params={"token": token})
-    assert res.headers["location"] == "/login?error=link_expired"
+    assert (await _verify(harness, token)).status_code == 410
+    assert (
+        await harness.client.get("/api/v1/auth/magic-link/preview", params={"token": token})
+    ).status_code == 410
 
 
 async def test_magic_link_expires(harness: Harness) -> None:
@@ -124,22 +137,17 @@ async def test_magic_link_expires(harness: Harness) -> None:
     async with harness.sessions() as db:
         await db.execute(update(MagicLink).values(expires_at=datetime.now(UTC) - timedelta(seconds=1)))
         await db.commit()
-    res = await harness.client.get("/api/v1/auth/magic-link/verify", params={"token": token})
-    assert res.headers["location"] == "/login?error=link_expired"
+    assert (await _verify(harness, token)).status_code == 410
     assert await _count(harness, User) == 0
 
 
 async def test_magic_link_rate_limited_per_email(harness: Harness) -> None:
-    for _ in range(5):
-        assert (
-            await harness.client.post("/api/v1/auth/magic-link", json={"email": "a@example.com"})
-        ).status_code == 202
-    assert (
-        await harness.client.post("/api/v1/auth/magic-link", json={"email": "a@example.com"})
-    ).status_code == 429
-    assert (
-        await harness.client.post("/api/v1/auth/magic-link", json={"email": "b@example.com"})
-    ).status_code == 202
+    async def request(email: str) -> int:
+        return (await harness.client.post("/api/v1/auth/magic-link", json={"email": email})).status_code
+
+    assert [await request("a@example.com") for _ in range(5)] == [202] * 5
+    assert await request("a@example.com") == 429
+    assert await request("b@example.com") == 202
 
 
 async def test_magic_link_disabled_by_flag(sessions) -> None:  # type: ignore[no-untyped-def]
@@ -151,8 +159,9 @@ async def test_magic_link_disabled_by_flag(sessions) -> None:  # type: ignore[no
             await h.client.post("/api/v1/auth/magic-link", json={"email": "a@example.com"})
         ).status_code == 404
         assert (
-            await h.client.get("/api/v1/auth/magic-link/verify", params={"token": "x"})
+            await h.client.get("/api/v1/auth/magic-link/preview", params={"token": "x"})
         ).status_code == 404
+        assert (await _verify(h, "x")).status_code == 404
     assert h.mailer.sent == []
 
 
@@ -177,10 +186,19 @@ async def test_session_expiry_slides_with_activity(harness: Harness) -> None:
     async with harness.sessions() as db:
         await db.execute(update(Session).values(expires_at=soon))
         await db.commit()
-    assert (await harness.client.get("/api/v1/me")).status_code == 200
+    res = await harness.client.get("/api/v1/me")
+    assert res.status_code == 200
     async with harness.sessions() as db:
         expires = (await db.execute(select(Session.expires_at))).scalar_one()
     assert expires > datetime.now(UTC) + timedelta(days=29)
+    # The browser cookie is re-issued with a fresh 30-day lifetime too.
+    assert f"Max-Age={30 * 86400}" in res.headers["set-cookie"]
+
+
+async def test_session_cookie_not_reissued_when_fresh(harness: Harness) -> None:
+    await harness.login()
+    res = await harness.client.get("/api/v1/me")
+    assert "set-cookie" not in res.headers
 
 
 async def test_state_changes_require_csrf_token(harness: Harness) -> None:
@@ -212,3 +230,35 @@ def test_https_deployment_refuses_default_secret() -> None:
         Settings(app_base_url="https://dictation.example")
     assert Settings(app_base_url="https://dictation.example", session_secret="x" * 40).cookie_secure
     assert not Settings(app_base_url="http://localhost:8080").cookie_secure
+
+
+async def test_google_network_failure_is_a_login_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    import httpx
+
+    from app.services.oauth_google import HttpGoogleClient, OAuthError
+
+    async def boom(*_: object) -> None:
+        raise httpx.ConnectError("unreachable")
+
+    client = HttpGoogleClient("id", "secret")
+    monkeypatch.setattr(client, "_fetch_profile", boom)
+    with pytest.raises(OAuthError):
+        await client.fetch_profile("code", "verifier", "http://test/cb")
+
+
+async def test_get_or_create_user_is_idempotent_and_truncates_names(harness: Harness) -> None:
+    import asyncio
+
+    from app.services.users import get_or_create_user
+
+    async def create() -> int:
+        async with harness.sessions() as db:
+            user = await get_or_create_user(db, "Race@Example.com", "N" * 300)
+            await db.commit()
+            return user.id
+
+    ids = await asyncio.gather(create(), create(), create())
+    assert len(set(ids)) == 1
+    async with harness.sessions() as db:
+        user = (await db.execute(select(User))).scalar_one()
+    assert (user.email, len(user.name)) == ("race@example.com", 120)

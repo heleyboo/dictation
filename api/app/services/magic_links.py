@@ -39,7 +39,7 @@ async def request_link(
         )
     )
     await db.commit()
-    link = f"{settings.app_base_url}/api/v1/auth/magic-link/verify?token={token}"
+    link = f"{settings.app_base_url}/login/confirm?token={token}"
     await mailer.send(
         Email(
             to=email,
@@ -50,6 +50,19 @@ async def request_link(
             ),
         )
     )
+
+
+async def find_usable(db: AsyncSession, token: str) -> MagicLink | None:
+    now = datetime.now(UTC)
+    return (
+        await db.execute(
+            select(MagicLink).where(
+                MagicLink.token_hash == hash_token(token),
+                MagicLink.used_at.is_(None),
+                MagicLink.expires_at > now,
+            )
+        )
+    ).scalar_one_or_none()
 
 
 async def consume_link(db: AsyncSession, token: str) -> MagicLink | None:

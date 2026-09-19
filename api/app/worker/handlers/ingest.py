@@ -110,7 +110,7 @@ async def translate_lesson(db: AsyncSession, payload: dict[str, Any]) -> None:
     if lesson is None or lesson.status != LessonStatus.PROCESSING or not lesson.segments:
         log.info("skip translate for lesson %s", payload.get("lesson_id"))
         return
-    translations = await translate_sentences(db, deps.llm(), lesson.title, [s.text for s in lesson.segments])
+    translations = await translate_sentences(deps.llm(), lesson.title, [s.text for s in lesson.segments])
     for segment, vi in zip(lesson.segments, translations, strict=True):
         segment.translation_vi = vi
     lesson.status = LessonStatus.REVIEW

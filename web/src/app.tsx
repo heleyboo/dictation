@@ -7,6 +7,7 @@ import { LessonCreatePage } from "@/features/admin/lesson-create-form";
 import { AdminLessonsPage } from "@/features/admin/lesson-table";
 import { SegmentReviewPage } from "@/features/admin/segment-review";
 import { RequireAdmin, RequireAuth } from "@/features/auth/guards";
+import { ConfirmLoginPage } from "@/features/auth/confirm-login-page";
 import { LoginPage } from "@/features/auth/login-page";
 import { HomePage } from "@/routes/home";
 
@@ -20,6 +21,7 @@ const admin = (page: ReactElement) => (
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  { path: "/login/confirm", element: <ConfirmLoginPage /> },
   {
     element: <AppShell />,
     children: [

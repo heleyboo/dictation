@@ -5,18 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, errorMessage } from "@/lib/api/client";
+import { safeReturnTo } from "./safe-return-to";
 import { useMe } from "./use-me";
 
 const ERRORS: Record<string, string> = {
   google: "Đăng nhập Google không thành công. Vui lòng thử lại.",
-  link_expired: "Liên kết đăng nhập đã hết hạn hoặc đã được dùng. Hãy gửi liên kết mới.",
 };
 const RESEND_AFTER_SECONDS = 60;
-
-/** Only same-site paths may be used as a post-login destination (the API enforces this too). */
-function safeReturnTo(value: string | null): string {
-  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/";
-}
 
 export function LoginPage() {
   const [params] = useSearchParams();

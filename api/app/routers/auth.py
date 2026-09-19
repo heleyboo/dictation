@@ -9,7 +9,7 @@ from itsdangerous import BadSignature, URLSafeTimedSerializer
 from pydantic import BaseModel, EmailStr
 
 from app.config import Settings
-from app.deps import SESSION_COOKIE, AuthDep, DbDep, GoogleDep, MailerDep, SettingsDep
+from app.deps import SESSION_COOKIE, AuthDep, DbDep, GoogleDep, MailerDep, SettingsDep, set_session_cookie
 from app.models import User
 from app.services import magic_links
 from app.services.oauth_google import OAuthError, authorization_url
@@ -46,19 +46,15 @@ def _google_redirect_uri(settings: Settings) -> str:
     return f"{settings.app_base_url}/api/v1/auth/google/callback"
 
 
-async def _sign_in(db: DbDep, settings: Settings, user: User, return_to: str) -> RedirectResponse:
+async def _start_session(db: DbDep, settings: Settings, user: User, response: Response) -> None:
     token = await create_session(db, user, timedelta(days=settings.session_ttl_days))
     await db.commit()
+    set_session_cookie(response, token, settings)
+
+
+async def _sign_in(db: DbDep, settings: Settings, user: User, return_to: str) -> RedirectResponse:
     response = RedirectResponse(safe_return_to(return_to), status_code=status.HTTP_303_SEE_OTHER)
-    response.set_cookie(
-        SESSION_COOKIE,
-        token,
-        max_age=settings.session_ttl_days * 86400,
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite="lax",
-        path="/",
-    )
+    await _start_session(db, settings, user, response)
     return response
 
 
@@ -142,18 +138,48 @@ async def request_magic_link(
     return MagicLinkAccepted(message="Kiểm tra email của bạn")
 
 
-@router.get("/magic-link/verify", response_class=RedirectResponse, status_code=status.HTTP_303_SEE_OTHER)
-async def verify_magic_link(
-    db: DbDep, settings: SettingsDep, token: Annotated[str, Query()]
-) -> RedirectResponse:
+class MagicLinkToken(BaseModel):
+    token: str
+
+
+class MagicLinkPreview(BaseModel):
+    email: str
+
+
+class SignedIn(BaseModel):
+    return_to: str
+
+
+def _require_magic_link(settings: Settings) -> None:
     if not settings.magic_link_enabled:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Magic link sign-in is disabled")
-    link = await magic_links.consume_link(db, token)
+
+
+@router.get("/magic-link/preview", response_model=MagicLinkPreview)
+async def preview_magic_link(
+    db: DbDep, settings: SettingsDep, token: Annotated[str, Query()]
+) -> MagicLinkPreview:
+    """Read-only check used by the confirmation page. Link scanners that fetch the emailed URL (a web page)
+    never reach the consuming POST below, so they cannot burn the single-use link."""
+    _require_magic_link(settings)
+    link = await magic_links.find_usable(db, token)
+    if link is None:
+        raise HTTPException(status.HTTP_410_GONE, "Liên kết đã hết hạn hoặc đã được dùng")
+    return MagicLinkPreview(email=link.email)
+
+
+@router.post("/magic-link/verify", response_model=SignedIn)
+async def verify_magic_link(
+    body: MagicLinkToken, db: DbDep, settings: SettingsDep, response: Response
+) -> SignedIn:
+    _require_magic_link(settings)
+    link = await magic_links.consume_link(db, body.token)
     if link is None:
         await db.rollback()
-        return _login_error("link_expired")
+        raise HTTPException(status.HTTP_410_GONE, "Liên kết đã hết hạn hoặc đã được dùng")
     user = await get_or_create_user(db, link.email)
-    return await _sign_in(db, settings, user, link.return_to)
+    await _start_session(db, settings, user, response)
+    return SignedIn(return_to=safe_return_to(link.return_to))
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

@@ -52,6 +52,12 @@ class HttpGoogleClient:
         self._client_secret = client_secret
 
     async def fetch_profile(self, code: str, verifier: str, redirect_uri: str) -> GoogleProfile:
+        try:
+            return await self._fetch_profile(code, verifier, redirect_uri)
+        except (httpx.HTTPError, ValueError, KeyError) as exc:
+            raise OAuthError(f"Google request failed: {type(exc).__name__}") from exc
+
+    async def _fetch_profile(self, code: str, verifier: str, redirect_uri: str) -> GoogleProfile:
         async with httpx.AsyncClient(timeout=10) as client:
             token_res = await client.post(
                 TOKEN_URL,

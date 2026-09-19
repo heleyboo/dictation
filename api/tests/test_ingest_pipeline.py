@@ -3,10 +3,10 @@ from typing import Any
 
 import pytest
 from pydantic import BaseModel
-from sqlalchemy import select, text, update
+from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.models import Job, Lesson, LessonStatus, LlmUsage
+from app.models import Job, Lesson, LessonStatus
 from app.services import lessons
 from app.services.llm_client import LlmError
 from app.services.segmentation import AlignedWord
@@ -32,11 +32,9 @@ class FakeLlm:
     drop: set[int] = field(default_factory=set)
     calls: int = 0
 
-    async def parse(
-        self, db: AsyncSession, *, purpose: str, system: str, prompt: str, schema: type[Any]
-    ) -> Any:
+    async def parse(self, *, purpose: str, system: str, prompt: str, schema: type[Any]) -> Any:
         self.calls += 1
-        db.add(LlmUsage(purpose=purpose, model="fake", input_tokens=10, output_tokens=5))
+        assert purpose == "translate"
         if self.calls <= self.fail_times:
             raise LlmError("refused")
         lines = prompt.split("Hãy dịch các câu sau, trả về đúng từng `idx`:\n", 1)[1].splitlines()
@@ -111,8 +109,7 @@ async def test_pipeline_aligns_translates_and_moves_to_review(
         "end_ms": 4200,
         "probability": 0.9,
     }
-    async with sessions() as db:
-        assert (await db.execute(select(LlmUsage.purpose))).scalars().all() == ["translate"]
+    assert fakes.calls == 1
 
 
 async def test_translation_retried_once_on_bad_answer(

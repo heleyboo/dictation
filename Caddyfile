@@ -15,6 +15,20 @@
 		-Server
 	}
 
+	# Cap request bodies before they reach the API: FastAPI parses (and spools) a multipart body before
+	# auth dependencies run, so an unauthenticated client could otherwise fill the disk.
+	@lessonUpload path /api/v1/admin/lessons
+	request_body @lessonUpload {
+		max_size 31MB
+	}
+	@apiSmallBody {
+		path /api/*
+		not path /api/v1/admin/lessons
+	}
+	request_body @apiSmallBody {
+		max_size 1MB
+	}
+
 	handle /api/* {
 		reverse_proxy api:8000
 	}

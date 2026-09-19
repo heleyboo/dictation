@@ -1,10 +1,11 @@
 """Shared FastAPI dependencies: settings, DB session, auth, CSRF, external clients."""
 
+import hmac
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Annotated
 
-from fastapi import Cookie, Depends, Header, HTTPException, Request, status
+from fastapi import Cookie, Depends, Header, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
@@ -33,6 +34,18 @@ MailerDep = Annotated[Mailer, Depends(get_mailer)]
 GoogleDep = Annotated[GoogleClient, Depends(get_google_client)]
 
 
+def set_session_cookie(response: Response, token: str, settings: Settings) -> None:
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=settings.session_ttl_days * 86400,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        path="/",
+    )
+
+
 @dataclass(frozen=True)
 class Auth:
     user: User
@@ -40,12 +53,21 @@ class Auth:
 
 
 async def get_optional_auth(
-    db: DbDep, settings: SettingsDep, sid: Annotated[str | None, Cookie(alias=SESSION_COOKIE)] = None
+    db: DbDep,
+    settings: SettingsDep,
+    response: Response,
+    sid: Annotated[str | None, Cookie(alias=SESSION_COOKIE)] = None,
 ) -> Auth | None:
     if not sid:
         return None
     resolved = await resolve_session(db, sid, timedelta(days=settings.session_ttl_days))
-    return Auth(user=resolved[1], session=resolved[0]) if resolved else None
+    if resolved is None:
+        return None
+    session, user, extended = resolved
+    if extended:
+        # Keep the browser cookie alive as long as the server-side session (AC-M1-03.1).
+        set_session_cookie(response, sid, settings)
+    return Auth(user=user, session=session)
 
 
 async def require_auth(
@@ -56,7 +78,9 @@ async def require_auth(
     """Logged-in user; state-changing requests must echo the session's CSRF token (AC-M1-03.2)."""
     if auth is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Chưa đăng nhập")
-    if request.method not in SAFE_METHODS and x_csrf_token != auth.session.csrf_token:
+    if request.method not in SAFE_METHODS and not hmac.compare_digest(
+        (x_csrf_token or "").encode(), auth.session.csrf_token.encode()
+    ):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "CSRF token không hợp lệ")
     return auth
 
