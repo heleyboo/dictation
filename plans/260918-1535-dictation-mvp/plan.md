@@ -26,7 +26,7 @@ source: skill
 ## Overview
 Build MVP theo `docs/srs-mvp.md` (nguồn sự thật cho FR/AC/NFR). Phase file chỉ tham chiếu ID (`FR-M5-02`, `AC-M4-01.1`), không chép lại AC. Quyết định & lý do: `plans/reports/brainstorm-260918-1535-dictation-mvp-srs-report.md`.
 
-Stack khoá: React/Vite/TS + TanStack Query + Tailwind/shadcn · FastAPI + SQLAlchemy 2 + Alembic · worker Python (Postgres job queue) · stable-ts (alignment) · `claude-haiku-4-5` · `fsrs` (Python) · R2 · Resend · Docker Compose 1 VPS.
+Stack khoá: React/Vite/TS + TanStack Query + Tailwind/shadcn · FastAPI + SQLAlchemy 2 + Alembic · worker Python (Postgres job queue) · stable-ts (alignment) · `claude-sonnet-5` (dịch lúc nhập bài) + `claude-haiku-4-5` (tra từ) · `fsrs` (Python) · R2 · Resend · Docker Compose 1 VPS.
 
 ## Repo layout (mục tiêu)
 ```

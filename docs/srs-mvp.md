@@ -1,6 +1,6 @@
 # SRS — Dictation Web App (MVP)
 
-- Phiên bản: 1.3 · Ngày: 2026-09-19 · Trạng thái: Approved (brainstorm + plan validation + UI handoff)
+- Phiên bản: 1.3 · Ngày: 2026-09-19 (dịch: Sonnet 5) · Trạng thái: Approved (brainstorm + plan validation + UI handoff)
 - UI handoff: `docs/ui/` (component map, interaction notes) + code khởi đầu trong `web/src/`; khi lệch, SRS là nguồn sự thật.
 - Nguồn quyết định: `plans/reports/brainstorm-260918-1535-dictation-mvp-srs-report.md`
 - Quy ước ID: `FR-<module>-<nn>` (yêu cầu), `AC-<module>-<nn>.<k>` (tiêu chí chấp nhận), `NFR-<nn>`. AC viết dạng Given/When/Then; mọi AC phải kiểm chứng được bằng test tự động hoặc bước manual ghi rõ.
@@ -41,7 +41,7 @@ Payment/gói trả phí · app mobile native · nhúng TED/YouTube hoặc nội 
 | Worker | Cùng Python package với API; job queue bằng bảng Postgres (`SELECT … FOR UPDATE SKIP LOCKED`), không Redis |
 | DB | PostgreSQL 16 |
 | Alignment | stable-ts `model.align(audio, text)` (forced alignment transcript thuần → word timing), chạy CPU |
-| LLM | Anthropic `claude-haiku-4-5` (tra từ + dịch câu), gọi qua 1 module `llm_client` duy nhất |
+| LLM | Anthropic qua 1 module `llm_client` duy nhất: `claude-sonnet-5` dịch câu lúc nhập bài (`TRANSLATE_MODEL`), `claude-haiku-4-5` tra từ (`LLM_MODEL`). *(v1.3: dịch đổi Haiku → Sonnet 5 sau khi so trên bài VOA thật — Haiku dịch sai thành ngữ/tên loài; ≈ $0.03/bài.)* |
 | SRS algorithm | Thư viện Python `fsrs` (open-spaced-repetition), tính lịch ở server |
 | Storage | Cloudflare R2 (S3-compatible) cho audio; phục vụ qua HTTPS có hỗ trợ HTTP Range |
 | Email | Resend (hoặc SMTP) qua 1 module `mailer` |

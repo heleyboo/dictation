@@ -46,7 +46,7 @@ class IngestDeps:
 def _default_deps() -> IngestDeps:
     return IngestDeps(
         storage=lambda: AudioStorage(get_settings()),
-        llm=lambda: AnthropicLlm(get_settings().llm_model),
+        llm=lambda: AnthropicLlm(get_settings().translate_model),
         align=alignment.align,
     )
 

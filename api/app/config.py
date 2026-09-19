@@ -43,8 +43,12 @@ class Settings(BaseSettings):
     # Browser-facing base URL for audio objects (bucket must allow public reads + HTTP Range).
     s3_public_base_url: str = "http://localhost:9010/dictation-audio"
 
-    # LLM (translation at ingest, word lookup later). The SDK reads ANTHROPIC_API_KEY itself.
+    # LLMs. The SDK reads ANTHROPIC_API_KEY itself.
+    # Word lookup (phase 4): frequent, latency-sensitive → Haiku.
     llm_model: str = "claude-haiku-4-5"
+    # Sentence translation at ingest: once per lesson, quality matters. Measured on a real VOA lesson:
+    # Haiku mistranslated idioms/names ("spend the winter", "milkweed"); Sonnet 5 did not (≈$0.03/lesson).
+    translate_model: str = "claude-sonnet-5"
     # Forced alignment model (stable-ts / Whisper); worker only.
     align_model: str = "base.en"
 
