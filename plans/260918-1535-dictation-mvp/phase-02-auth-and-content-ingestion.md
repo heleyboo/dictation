@@ -1,7 +1,7 @@
 ---
 phase: 2
 title: Auth and content ingestion
-status: in-progress
+status: completed
 priority: P1
 effort: 5-7d
 dependencies:

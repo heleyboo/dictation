@@ -3,7 +3,7 @@ title: Dictation webapp MVP
 description: >-
   Webapp luyện nghe chép chính tả EN cho người Việt: player thông minh, diff
   real-time, thư viện theo level, vocab + FSRS, retention
-status: in-progress
+status: pending
 priority: P2
 branch: main
 tags:
@@ -41,7 +41,7 @@ Caddyfile · .env.example · .github/workflows/ci.yml
 | Phase | Name | Status |
 |-------|------|--------|
 | 1 | [Scaffold](./phase-01-scaffold.md) | Completed |
-| 2 | [Auth and content ingestion](./phase-02-auth-and-content-ingestion.md) | In Progress |
+| 2 | [Auth and content ingestion](./phase-02-auth-and-content-ingestion.md) | Completed |
 | 3 | [Core learning loop](./phase-03-core-learning-loop.md) | Pending |
 | 4 | [Vocabulary builder](./phase-04-vocabulary-builder.md) | Pending |
 | 5 | [Retention](./phase-05-retention.md) | Pending |
